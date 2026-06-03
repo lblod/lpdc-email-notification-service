@@ -1,0 +1,24 @@
+{
+  "name": "lpdc-email-notification-service",
+  "version": "0.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "release": "release-it"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lblod/lpdc-email-notification-service.git"
+  },
+  "private": true,
+  "dependencies": {
+    "@lblod/mu-auth-sudo": "^1.1.0",
+    "body-parser": "^2.2.2",
+    "cron": "^4.4.0",
+    "date-fns": "^4.1.0",
+    "env-var": "^7.5.0",
+    "lodash.flatten": "^4.4.0",
+    "release-it": "^17.0.0"
+  }
+}
