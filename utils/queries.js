@@ -6,11 +6,8 @@ import {
 } from "mu";
 import { querySudo as query, updateSudo as update } from "@lblod/mu-auth-sudo";
 import {
-  ORG_GRAPH_BASE,
-  ORG_GRAPH_SUFFIX,
   SYSTEM_EMAIL_GRAPH,
   OUTBOX_FOLDER_URI,
-  ERROR_GRAPH,
   FROM_EMAIL_ADDRESS,
 } from "../env";
 import { PREFIXES, FEEDBACK_STATUS, SERVICE_URI } from "./constants";
@@ -80,6 +77,10 @@ export async function getFeedbackChanges(instanceUris, since) {
     feedbackModifiedDate: binding.feedbackModifiedDate?.value,
     feedbackDate: binding.feedbackDate?.value,
   }));
+}
+export async function getFormalInformalChanges(instanceUris, since) {
+}
+export async function getReviewChanges(instanceUris, since) {
 }
 
 // TODO: subject to change once subscription data model is defined
