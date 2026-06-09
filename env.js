@@ -1,5 +1,9 @@
 import env from "env-var";
 
+const LPDC_URL = env
+  .get("LPDC_URL")
+  .default("https://lpdc.lokaalbestuur.vlaanderen.be")
+  .asString();
 const IPDC_URL = env
   .get("IPDC_URL")
   .default("https://productcatalogus.ipdc.vlaanderen.be")
@@ -22,6 +26,7 @@ const OUTBOX_FOLDER_URI = env
   .asString();
 
 export {
+  LPDC_URL,
   IPDC_URL,
   WEEKLY_CRON,
   MONTHLY_CRON,

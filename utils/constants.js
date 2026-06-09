@@ -15,6 +15,7 @@ export const PREFIXES = `
   PREFIX belgif: <http://vocab.belgif.be/ns/publicservice#>
   PREFIX foaf: <http://xmlns.com/foaf/0.1/>
   PREFIX schema: <http://schema.org/>
+  PREFIX schema2: <https://schema.org/>
   PREFIX adms: <http://www.w3.org/ns/adms#>
   PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
   PREFIX ps: <http://vocab.belgif.be/ns/publicservice#>
@@ -28,6 +29,7 @@ export const PREFIXES = `
   PREFIX prov: <http://www.w3.org/ns/prov#>
   PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
   PREFIX oslc: <http://open-services.net/ns/core#>
+  PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
 `;
 
 export const FEEDBACK_STATUS = {

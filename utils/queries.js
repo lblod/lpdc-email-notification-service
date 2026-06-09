@@ -79,8 +79,10 @@ export async function getFeedbackChanges(instanceUris, since) {
   }));
 }
 export async function getFormalInformalChanges(instanceUris, since) {
+  return [];
 }
 export async function getReviewChanges(instanceUris, since) {
+  return [];
 }
 
 // TODO: subject to change once subscription data model is defined
@@ -102,9 +104,9 @@ export async function updateLastNotifiedAt(subscriptionUri, date) {
         ${sparqlEscapeUri(subscriptionUri)} a ext:Subscription .
         OPTIONAL { ${sparqlEscapeUri(subscriptionUri)} ext:lastNotifiedAt ?oldTime . }
       }
+      FILTER STRSTARTS(str(?g), "http://mu.semte.ch/graphs/organizations/")
+      FILTER STRENDS(str(?g), "/LoketLB-LPDCGebruiker")
     }
-    FILTER STRSTARTS(str(?g), "http://mu.semte.ch/graphs/organizations/")
-    FILTER STRENDS(str(?g), "/LoketLB-LPDCGebruiker")
   `;
   await update(queryString);
 }
@@ -129,9 +131,9 @@ export async function insertEmail(subscription, email) {
                                       nmo:messageSubject ${sparqlEscapeString(email.subject)} ;
                                       nmo:emailTo ${sparqlEscapeString(email.to)} ;
                                       nmo:messageFrom ${sparqlEscapeString(FROM_EMAIL_ADDRESS)} ;
-                                      dcterms:creator ${sparqlEscapeUri(SERVICE_URI)} ;
-                                      dcterms:references ${sparqlEscapeUri(subscription.uri)} ;
-                                      dcterms:created ${sparqlEscapeDateTime(now)} .
+                                      dct:creator ${sparqlEscapeUri(SERVICE_URI)} ;
+                                      dct:references ${sparqlEscapeUri(subscription.uri)} ;
+                                      dct:created ${sparqlEscapeDateTime(now)} .
       }
     }`;
     await update(emailQuery);
