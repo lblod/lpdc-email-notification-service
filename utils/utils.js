@@ -1,3 +1,5 @@
+import { formatInTimeZone } from 'date-fns-tz';
+
 export function getUUIDFromUri(uri) {
   const segmentedUri = uri.split("/");
   return segmentedUri[segmentedUri.length - 1];
@@ -8,4 +10,12 @@ export function getWindowStart(frequency) {
   if (frequency === "weekly") now.setDate(now.getDate() - 7);
   if (frequency === "monthly") now.setMonth(now.getMonth() - 1);
   return now;
+}
+
+export function formatDate(date) {
+  return formatInTimeZone(
+    date,
+    'Europe/Brussels',
+    'dd/MM/yyyy HH:mm'
+  );
 }
