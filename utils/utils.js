@@ -3,9 +3,9 @@ export function getUUIDFromUri(uri) {
   return segmentedUri[segmentedUri.length - 1];
 }
 
-export function getWindowStart(cadence) {
+export function getWindowStart(frequency) {
   const now = new Date();
-  if (cadence === "weekly") now.setDate(now.getDate() - 7);
-  if (cadence === "monthly") now.setMonth(now.getMonth() - 1);
+  if (frequency === "weekly") now.setDate(now.getDate() - 7);
+  if (frequency === "monthly") now.setMonth(now.getMonth() - 1);
   return now;
 }

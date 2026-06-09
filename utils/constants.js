@@ -1,4 +1,4 @@
-export const prefixes = `
+export const PREFIXES = `
   PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
   PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
   PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
@@ -30,7 +30,7 @@ export const prefixes = `
   PREFIX oslc: <http://open-services.net/ns/core#>
 `;
 
-export const feedbackStatus = {
+export const FEEDBACK_STATUS = {
   OPEN: "http://lblod.data.gift/concepts/1b3c5e7f-2a4d-4c6e-9f1b-3d5a7c9e2f4b",
   BEZIG: "http://lblod.data.gift/concepts/7c9e1a3f-5d8b-4e2c-9a1e-3f5b7d9c2e4a",
   VERWERKT:
@@ -38,3 +38,6 @@ export const feedbackStatus = {
   VERZONDEN:
     "http://lblod.data.gift/concepts/a0575bbd-17b6-4f04-b1b2-e554e29cd428",
 };
+
+export const SERVICE_URI =
+  "http://lblod.data.gift/services/lpdc-email-notification-service";
