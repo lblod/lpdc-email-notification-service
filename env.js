@@ -4,8 +4,8 @@ const IPDC_URL = env
   .get("IPDC_URL")
   .default("https://productcatalogus.ipdc.vlaanderen.be")
   .asString();
-const WEEKLY_CRON = env.get("INGEST_CRON").default("0 8 * * 1").asString();
-const MONTHLY_CRON = env.get("PUBLISH_CRON").default("0 8 1 * *").asString();
+const WEEKLY_CRON = env.get("WEEKLY_CRON").default("0 8 * * 1").asString();
+const MONTHLY_CRON = env.get("MONTHLY_CRON").default("0 8 1 * *").asString();
 const FROM_EMAIL_ADDRESS = env
   .get("FROM_EMAIL_ADDRESS")
   .default(
