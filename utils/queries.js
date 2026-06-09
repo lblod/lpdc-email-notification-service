@@ -12,7 +12,6 @@ import {
   OUTBOX_FOLDER_URI,
   ERROR_GRAPH,
   FROM_EMAIL_ADDRESS,
-  SERVICE_URI,
 } from "../env";
 import { PREFIXES, FEEDBACK_STATUS, SERVICE_URI } from "./constants";
 

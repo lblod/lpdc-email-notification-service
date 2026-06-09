@@ -4,17 +4,25 @@ import { CronJob } from "cron";
 import { processNotifications } from "./lib/tasks";
 import { WEEKLY_CRON, MONTHLY_CRON } from "./env";
 
-const weeklyJob = new CronJob(WEEKLY_CRON, () =>
-  processNotifications("weekly"),
-);
+const weeklyJob = new CronJob(WEEKLY_CRON, async () => {
+  try {
+    await processNotifications("weekly");
+  } catch (error) {
+    console.error("Weekly job failed", error);
+  }
+});
 weeklyJob.start();
 console.log(
   `Registered a weekly task for fetching and processing instance subscription notifications at ${new Date().toISOString()}`,
 );
 
-const monthlyJob = new CronJob(MONTHLY_CRON, () =>
-  processNotifications("monthly"),
-);
+const monthlyJob = new CronJob(MONTHLY_CRON, async () => {
+  try {
+    await processNotifications("monthly");
+  } catch (error) {
+    console.error("Monthly job failed", error);
+  }
+});
 monthlyJob.start();
 console.log(
   `Registered a monthly task for fetching and processing instance subscription notifications at ${new Date().toISOString()}`,
