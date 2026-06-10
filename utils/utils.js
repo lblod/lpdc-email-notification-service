@@ -19,3 +19,11 @@ export function formatDate(date) {
     'dd/MM/yyyy HH:mm'
   );
 }
+
+export function userGraph(orgUuid) {
+  return sparqlEscapeUri(`http://mu.semte.ch/graphs/organizations/${orgUuid}/LoketLB-LPDCGebruiker`);
+}
+
+export function orgGraph(orgUuid) {
+  return sparqlEscapeUri(`http://mu.semte.ch/graphs/organizations/${orgUuid}`);
+}

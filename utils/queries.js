@@ -11,6 +11,7 @@ import {
   FROM_EMAIL_ADDRESS,
 } from "../env";
 import { PREFIXES, FEEDBACK_STATUS, SERVICE_URI } from "./constants";
+import { userGraph, orgGraph } from "./utils";
 
 // TODO:
 export async function getActiveSubscriptions(frequency) {
@@ -19,19 +20,18 @@ export async function getActiveSubscriptions(frequency) {
    `;
 
   const queryResult = await query(queryString);
-}
+// TODO: change back to array of instanceUris
+export async function getFeedbackChanges(instanceUri, since, orgUuid) {
+  if (!instanceUri) return [];
 
-export async function getFeedbackChanges(instanceUris, since) {
-  if (!instanceUris || instanceUris.length === 0) return [];
-
-  const escapedUris = instanceUris.map((uri) => sparqlEscapeUri(uri)).join(" ");
+  const escapedUri = sparqlEscapeUri(instanceUri);
   const queryString = `
     ${PREFIXES}
-    SELECT ?instanceUri ?title ?creator ?lastModifier ?feedbackModifiedDate ?feedbackText ?feedbackOrganization ?feedbackDate WHERE {
-          GRAPH ?g {
-            VALUES ?instanceUri { ${escapedUris} }
+    SELECT ?instanceUri ?title ?creator ?feedbackModifiedDate ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName ?feedbackText ?feedbackOrganizationLabel ?feedbackDate WHERE {
+          GRAPH ${userGraph(orgUuid)} {
+            VALUES ?instanceUri { ${escapedUri} }
 
-            ?instanceUri ipdc:feedbackAvailable true ;
+            ?instanceUri lpdcExt:feedbackAvailable true ;
                          ext:feedbackModifiedDate ?feedbackModifiedDate .
             OPTIONAL {
               ?instanceUri dct:title ?title .
@@ -58,30 +58,54 @@ export async function getFeedbackChanges(instanceUris, since) {
 
               FILTER (?newerFeedbackDate > ?feedbackDate || (?newerFeedbackDate = ?feedbackDate && str(?newerFeedback) > str(?feedback)))
             }
-
-            FILTER STRSTARTS(str(?g), "http://mu.semte.ch/graphs/organizations/")
-            FILTER STRENDS(str(?g), "/LoketLB-LPDCGebruiker")
             FILTER(?feedbackModifiedDate >= ${sparqlEscapeDateTime(since)})
+          }
+          OPTIONAL {
+            GRAPH ${orgGraph(orgUuid)} {
+              ?creator foaf:firstName ?creatorFirstName ;
+                      foaf:familyName ?creatorFamilyName .
+            }
+          }
+          OPTIONAL {
+            GRAPH ${orgGraph(orgUuid)} {
+              ?lastModifier foaf:firstName ?lastModifierFirstName ;
+                            foaf:familyName ?lastModifierFamilyName .
+            }
+          }
+          OPTIONAL {
+            GRAPH <http://mu.semte.ch/graphs/public> {
+              ?feedbackOrganization skos:prefLabel ?feedbackOrganizationLabel .
+            }
           }
         }
    `;
 
   const queryResult = await query(queryString);
-  return (queryResult.results?.bindings || []).map((binding) => ({
-    instanceUri: binding.instanceUri.value,
-    title: binding.title?.value || "",
-    creator: binding.creator?.value || "Onbekend",
-    lastModifier: binding.lastModifier?.value || "Onbekend",
-    feedbackText: binding.feedbackText?.value || "",
-    feedbackOrganization: binding.feedbackOrganization.value,
-    feedbackModifiedDate: binding.feedbackModifiedDate?.value,
-    feedbackDate: binding.feedbackDate?.value,
-  }));
+  return (queryResult.results?.bindings || []).map((binding) => {
+    const creatorFirstName = binding.creatorFirstName?.value || "";
+    const creatorLastName = binding.creatorFamilyName?.value || "";
+    const creatorFullName = `${creatorFirstName} ${creatorLastName}`.trim();
+
+    const modifierFirstName = binding.lastModifierFirstName?.value || "";
+    const modifierLastName = binding.lastModifierFamilyName?.value || "";
+    const modifierFullName = `${modifierFirstName} ${modifierLastName}`.trim();
+
+    return {
+      instanceUri: binding.instanceUri.value,
+      title: binding.title?.value || "",
+      creator: creatorFullName || "Onbekend",
+      lastModifier: modifierFullName || "Onbekend",
+      feedbackText: binding.feedbackText?.value || "",
+      feedbackOrganization: binding.feedbackOrganizationLabel?.value || "Onbekend",
+      feedbackModifiedDate: new Date(binding.feedbackModifiedDate?.value),
+      feedbackDate: new Date(binding.feedbackDate?.value),
+    };
+  });
 }
-export async function getFormalInformalChanges(instanceUris, since) {
+export async function getFormalInformalChanges(instanceUris, since, orgUuid) {
   return [];
 }
-export async function getReviewChanges(instanceUris, since) {
+export async function getReviewChanges(instanceUris, since, orgUuid) {
   return [];
 }
 
