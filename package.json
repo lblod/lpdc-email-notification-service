@@ -19,7 +19,6 @@
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
     "env-var": "^7.5.0",
-    "lodash.flatten": "^4.4.0",
     "release-it": "^17.0.0"
   }
 }

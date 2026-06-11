@@ -1,4 +1,5 @@
-import { formatInTimeZone } from 'date-fns-tz';
+import { formatInTimeZone } from "date-fns-tz";
+import { sparqlEscapeUri } from "mu";
 
 export function getUUIDFromUri(uri) {
   const segmentedUri = uri.split("/");
@@ -13,15 +14,13 @@ export function getWindowStart(frequency) {
 }
 
 export function formatDate(date) {
-  return formatInTimeZone(
-    date,
-    'Europe/Brussels',
-    'dd/MM/yyyy HH:mm'
-  );
+  return formatInTimeZone(date, "Europe/Brussels", "dd/MM/yyyy HH:mm");
 }
 
 export function userGraph(orgUuid) {
-  return sparqlEscapeUri(`http://mu.semte.ch/graphs/organizations/${orgUuid}/LoketLB-LPDCGebruiker`);
+  return sparqlEscapeUri(
+    `http://mu.semte.ch/graphs/organizations/${orgUuid}/LoketLB-LPDCGebruiker`,
+  );
 }
 
 export function orgGraph(orgUuid) {

@@ -13,18 +13,54 @@ import {
 import { PREFIXES, FEEDBACK_STATUS, SERVICE_URI } from "./constants";
 import { userGraph, orgGraph } from "./utils";
 
-// TODO:
+// TODO: Quick mock function, to be replaced with actual implementation once subscription data model is defined
 export async function getActiveSubscriptions(frequency) {
   const queryString = `
    ${PREFIXES}
+    SELECT ?subscription ?instanceUri ?emailAddress ?orgUuid ?lastNotifiedAt WHERE {
+      GRAPH ?g {
+        ?subscription a ext:Subscription ;
+                      ext:instanceUri ?instanceUri ;
+                      ext:subscriptionActive true ;
+                      ext:emailAddress ?emailAddress ;
+                      ext:orgUuid ?orgUuid ;
+                      ext:subscriptionFrequency ${sparqlEscapeString(frequency)} .
+        OPTIONAL { ?subscription ext:lastNotifiedAt ?lastNotifiedAt . }
+      }
+      FILTER STRSTARTS(str(?g), "http://mu.semte.ch/graphs/organizations/")
+      FILTER STRENDS(str(?g), "/LoketLB-LPDCGebruiker")
+    }
    `;
 
   const queryResult = await query(queryString);
-// TODO: change back to array of instanceUris
-export async function getFeedbackChanges(instanceUri, since, orgUuid) {
-  if (!instanceUri) return [];
+  const bindings = queryResult.results?.bindings || [];
 
-  const escapedUri = sparqlEscapeUri(instanceUri);
+  // Group by subscription URI, as there can be multiple instanceUris per subscription
+  const map = new Map();
+  for (const binding of bindings) {
+    const uri = binding.subscription.value;
+    if (!map.has(uri)) {
+      map.set(uri, {
+        uri,
+        frequency,
+        emailAddress: binding.emailAddress.value,
+        lastNotifiedAt: binding.lastNotifiedAt?.value,
+        orgUuid: binding.orgUuid?.value,
+        instanceUris: [],
+      });
+    }
+    map.get(uri).instanceUris.push(binding.instanceUri.value);
+  }
+  console.log('Finished grouping the subscriptions by URI, result:', Array.from(map.values()));
+  return Array.from(map.values());
+}
+
+export async function getFeedbackChanges(instanceUris, since, orgUuid) {
+  if (!instanceUris || instanceUris.length === 0) return [];
+
+  const escapedUris = instanceUris
+    .map((uri) => sparqlEscapeUri(uri))
+    .join(" ");
   const queryString = `
     ${PREFIXES}
     SELECT ?instanceUri ?title ?creator ?feedbackModifiedDate ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName ?feedbackText ?feedbackOrganizationLabel ?feedbackDate WHERE {
@@ -96,7 +132,8 @@ export async function getFeedbackChanges(instanceUri, since, orgUuid) {
       creator: creatorFullName || "Onbekend",
       lastModifier: modifierFullName || "Onbekend",
       feedbackText: binding.feedbackText?.value || "",
-      feedbackOrganization: binding.feedbackOrganizationLabel?.value || "Onbekend",
+      feedbackOrganization:
+        binding.feedbackOrganizationLabel?.value || "Onbekend",
       feedbackModifiedDate: new Date(binding.feedbackModifiedDate?.value),
       feedbackDate: new Date(binding.feedbackDate?.value),
     };
