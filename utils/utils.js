@@ -26,3 +26,23 @@ export function userGraph(orgUuid) {
 export function orgGraph(orgUuid) {
   return sparqlEscapeUri(`http://mu.semte.ch/graphs/organizations/${orgUuid}`);
 }
+
+export function stripHtmlAndTruncate(htmlString, maxLength = 100) {
+  let cleanText = htmlString
+    .replace(/<\/p>|<\/div>|<br\s*\/?>/gi, " ")
+    .replace(/<\/?[^>]+(>|$)/g, "")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;|&#39;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (cleanText.length > maxLength) {
+    return cleanText.substring(0, maxLength).trim() + "...";
+  }
+
+  return cleanText;
+}
