@@ -1,5 +1,6 @@
 import { formatInTimeZone } from "date-fns-tz";
 import { sparqlEscapeUri } from "mu";
+import { FREQUENCIES } from "./constants.js";
 
 export function getUUIDFromUri(uri) {
   const segmentedUri = uri.split("/");
@@ -8,8 +9,8 @@ export function getUUIDFromUri(uri) {
 
 export function getWindowStart(frequency) {
   const now = new Date();
-  if (frequency === "weekly") now.setDate(now.getDate() - 7);
-  if (frequency === "monthly") now.setMonth(now.getMonth() - 1);
+  if (frequency === FREQUENCIES.WEEKLY) now.setDate(now.getDate() - 7);
+  if (frequency === FREQUENCIES.MONTHLY) now.setMonth(now.getMonth() - 1);
   return now;
 }
 

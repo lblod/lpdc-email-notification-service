@@ -43,3 +43,8 @@ export const FEEDBACK_STATUS = {
 
 export const SERVICE_URI =
   "http://lblod.data.gift/services/lpdc-email-notification-service";
+
+export const FREQUENCIES = {
+  WEEKLY: "weekly",
+  MONTHLY: "monthly",
+};
