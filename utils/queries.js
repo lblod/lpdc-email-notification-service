@@ -139,11 +139,100 @@ export async function getFeedbackChanges(instanceUris, since, orgUuid) {
     };
   });
 }
+
 export async function getFormalInformalChanges(instanceUris, since, orgUuid) {
-  return [];
+  if (!instanceUris || instanceUris.length === 0) return [];
+
+  const escapedUris = instanceUris
+    .map((uri) => sparqlEscapeUri(uri))
+    .join(" ");
+  const queryString = `
+    ${PREFIXES}
+    SELECT ?instanceUri ?title ?creator ?formalInformalModifiedDate ?dutchLanguageVariant ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName
+    WHERE {
+      GRAPH ${userGraph(orgUuid)} {
+        VALUES ?instanceUri { ${escapedUris} }
+
+        ?instanceUri lpdcExt:needsConversionFromFormalToInformal true ;
+                     lpdcExt:dutchLanguageVariant ?dutchLanguageVariant ;
+                     lpdcExt:formalInformalModifiedDate ?formalInformalModifiedDate .
+
+        OPTIONAL { ?instanceUri dct:title ?title . }
+        OPTIONAL { ?instanceUri dct:creator ?creator . }
+        OPTIONAL { ?instanceUri ext:lastModifiedBy ?lastModifier . }
+
+        FILTER(?formalInformalModifiedDate >= ${sparqlEscapeDateTime(since)})
+      }
+
+      OPTIONAL {
+        GRAPH ${orgGraph(orgUuid)} {
+          ?creator foaf:firstName ?creatorFirstName ;
+                   foaf:familyName ?creatorFamilyName .
+        }
+      }
+
+      OPTIONAL {
+        GRAPH ${orgGraph(orgUuid)} {
+          ?lastModifier foaf:firstName ?lastModifierFirstName ;
+                        foaf:familyName ?lastModifierFamilyName .
+        }
+      }
+    }
+  `;
+
+  const queryResult = await query(queryString);
+  return (queryResult.results?.bindings || []).map((binding) => {
+    const creatorFirstName = binding.creatorFirstName?.value || "";
+    const creatorLastName = binding.creatorFamilyName?.value || "";
+    const creatorFullName = `${creatorFirstName} ${creatorLastName}`.trim();
+
+    const modifierFirstName = binding.lastModifierFirstName?.value || "";
+    const modifierLastName = binding.lastModifierFamilyName?.value || "";
+    const modifierFullName = `${modifierFirstName} ${modifierLastName}`.trim();
+
+    return {
+      instanceUri: binding.instanceUri.value,
+      title: binding.title?.value || "",
+      creator: creatorFullName || "Onbekend",
+      lastModifier: modifierFullName || "Onbekend",
+      dutchLanguageVariant: binding.dutchLanguageVariant?.value || "",
+      formalInformalModifiedDate: new Date(
+        binding.formalInformalModifiedDate.value
+      ),
+    };
+  });
 }
-export async function getReviewChanges(instanceUris, since, orgUuid) {
+
+export async function getRevisionChanges(instanceUris, since, orgUuid) {
+  if (!instanceUris || instanceUris.length === 0) return [];
+
+  const escapedUris = instanceUris
+    .map((uri) => sparqlEscapeUri(uri))
+    .join(" ");
   return [];
+  const queryString = `
+    ${PREFIXES}
+  `;
+
+
+  const queryResult = await query(queryString);
+  return (queryResult.results?.bindings || []).map((binding) => {
+    const creatorFirstName = binding.creatorFirstName?.value || "";
+    const creatorLastName = binding.creatorFamilyName?.value || "";
+    const creatorFullName = `${creatorFirstName} ${creatorLastName}`.trim();
+
+    const modifierFirstName = binding.lastModifierFirstName?.value || "";
+    const modifierLastName = binding.lastModifierFamilyName?.value || "";
+    const modifierFullName = `${modifierFirstName} ${modifierLastName}`.trim();
+
+    return {
+      instanceUri: binding.instanceUri.value,
+      title: binding.title?.value || "",
+      creator: creatorFullName || "Onbekend",
+      lastModifier: modifierFullName || "Onbekend",
+      revisionModifiedDate: new Date(binding.revisionModifiedDate.value),
+    };
+  });
 }
 
 // TODO: subject to change once subscription data model is defined
