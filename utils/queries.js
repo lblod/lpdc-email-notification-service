@@ -211,14 +211,14 @@ export async function getRevisionChanges(instanceUris, since, orgUuid) {
     .join(" ");
   const queryString = `
     ${PREFIXES}
-    SELECT DISTINCT ?instanceUri ?title ?creator ?status ?productID ?revisionModifiedDate ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName ?versionedSource ?hasLatestFunctionalChange
+    SELECT DISTINCT ?instanceUri ?title ?creator ?status ?productID ?reviewStatusModifiedDate ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName ?versionedSource ?hasLatestFunctionalChange
     WHERE {
       GRAPH ${userGraph(orgUuid)} {
         VALUES ?instanceUri { ${escapedUris} }
 
         ?instanceUri ext:reviewStatus ?status ;
                      schema:productID ?productID ;
-                     lpdcExt:revisionModifiedDate ?revisionModifiedDate .
+                     lpdcExt:reviewStatusModifiedDate ?reviewStatusModifiedDate .
 
         OPTIONAL { ?instanceUri dct:title ?title . }
         OPTIONAL { ?instanceUri dct:creator ?creator . }
@@ -228,7 +228,7 @@ export async function getRevisionChanges(instanceUris, since, orgUuid) {
         OPTIONAL { ?instanceUri dct:source ?source .
                    ?source lpdc:hasLatestFunctionalChange ?hasLatestFunctionalChange .}
 
-        FILTER(?revisionModifiedDate >= ${sparqlEscapeDateTime(since)})
+        FILTER(?reviewStatusModifiedDate >= ${sparqlEscapeDateTime(since)})
         FILTER(?status IN (
           <http://lblod.data.gift/concepts/review-status/concept-gewijzigd>,
           <http://lblod.data.gift/concepts/review-status/concept-gearchiveerd>
@@ -275,7 +275,7 @@ export async function getRevisionChanges(instanceUris, since, orgUuid) {
       status: statusMap[binding.status?.value],
       versionedSource: binding.versionedSource?.value || "Onbekend",
       hasLatestFunctionalChange: binding.hasLatestFunctionalChange?.value || "Onbekend",
-      revisionModifiedDate: new Date(binding.revisionModifiedDate.value),
+      reviewStatusModifiedDate: new Date(binding.reviewStatusModifiedDate.value),
     };
   });
 }
