@@ -247,6 +247,10 @@ export async function getRevisionChanges(instanceUris, since, orgUuid) {
     }
   `;
 
+  const reviewStatusMap = {
+    "http://lblod.data.gift/concepts/review-status/concept-gewijzigd": "gewijzigd",
+    "http://lblod.data.gift/concepts/review-status/concept-gearchiveerd": "gearchiveerd",
+  };
 
   const queryResult = await query(queryString);
   return (queryResult.results?.bindings || []).map((binding) => {
@@ -263,6 +267,7 @@ export async function getRevisionChanges(instanceUris, since, orgUuid) {
       title: binding.title?.value || "",
       creator: creatorFullName || "Onbekend",
       lastModifier: modifierFullName || "Onbekend",
+      reviewStatus: binding.reviewStatus?.value,
       revisionModifiedDate: new Date(binding.revisionModifiedDate.value),
     };
   });
