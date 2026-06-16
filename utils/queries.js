@@ -203,7 +203,7 @@ export async function getFormalInformalChanges(instanceUris, since, orgUuid) {
   });
 }
 
-export async function getRevisionChanges(instanceUris, since, orgUuid) {
+export async function getReviewStatusChanges(instanceUris, since, orgUuid) {
   if (!instanceUris || instanceUris.length === 0) return [];
 
   const escapedUris = instanceUris
