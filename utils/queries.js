@@ -209,23 +209,27 @@ export async function getRevisionChanges(instanceUris, since, orgUuid) {
   const escapedUris = instanceUris
     .map((uri) => sparqlEscapeUri(uri))
     .join(" ");
-  return [];
   const queryString = `
     ${PREFIXES}
-    SELECT DISTINCT ?instanceUri ?title ?creator ?revisionModifiedDate ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName
+    SELECT DISTINCT ?instanceUri ?title ?creator ?status ?productID ?revisionModifiedDate ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName ?versionedSource ?hasLatestFunctionalChange
     WHERE {
       GRAPH ${userGraph(orgUuid)} {
         VALUES ?instanceUri { ${escapedUris} }
 
-        ?instanceUri ext:reviewStatus ?reviewStatus ;
+        ?instanceUri ext:reviewStatus ?status ;
+                     schema:productID ?productID ;
                      lpdcExt:revisionModifiedDate ?revisionModifiedDate .
 
         OPTIONAL { ?instanceUri dct:title ?title . }
         OPTIONAL { ?instanceUri dct:creator ?creator . }
         OPTIONAL { ?instanceUri ext:lastModifiedBy ?lastModifier . }
+        OPTIONAL { ?instanceUri ext:versionedSource ?versionedSource . }
 
-        FILTER(?revisionModifiedDate ?revisionModifiedDate . >= ${sparqlEscapeDateTime(since)})
-        FILTER(?reviewStatus IN (
+        OPTIONAL { ?instanceUri dct:source ?source .
+                   ?source lpdc:hasLatestFunctionalChange ?hasLatestFunctionalChange .}
+
+        FILTER(?revisionModifiedDate >= ${sparqlEscapeDateTime(since)})
+        FILTER(?status IN (
           <http://lblod.data.gift/concepts/review-status/concept-gewijzigd>,
           <http://lblod.data.gift/concepts/review-status/concept-gearchiveerd>
         ))
@@ -247,7 +251,7 @@ export async function getRevisionChanges(instanceUris, since, orgUuid) {
     }
   `;
 
-  const reviewStatusMap = {
+  const statusMap = {
     "http://lblod.data.gift/concepts/review-status/concept-gewijzigd": "gewijzigd",
     "http://lblod.data.gift/concepts/review-status/concept-gearchiveerd": "gearchiveerd",
   };
@@ -265,9 +269,12 @@ export async function getRevisionChanges(instanceUris, since, orgUuid) {
     return {
       instanceUri: binding.instanceUri.value,
       title: binding.title?.value || "",
+      productID: binding.productID.value,
       creator: creatorFullName || "Onbekend",
       lastModifier: modifierFullName || "Onbekend",
-      reviewStatus: binding.reviewStatus?.value,
+      status: statusMap[binding.status?.value],
+      versionedSource: binding.versionedSource?.value || "Onbekend",
+      hasLatestFunctionalChange: binding.hasLatestFunctionalChange?.value || "Onbekend",
       revisionModifiedDate: new Date(binding.revisionModifiedDate.value),
     };
   });
