@@ -212,6 +212,39 @@ export async function getRevisionChanges(instanceUris, since, orgUuid) {
   return [];
   const queryString = `
     ${PREFIXES}
+    SELECT DISTINCT ?instanceUri ?title ?creator ?revisionModifiedDate ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName
+    WHERE {
+      GRAPH ${userGraph(orgUuid)} {
+        VALUES ?instanceUri { ${escapedUris} }
+
+        ?instanceUri ext:reviewStatus ?reviewStatus ;
+                     lpdcExt:revisionModifiedDate ?revisionModifiedDate .
+
+        OPTIONAL { ?instanceUri dct:title ?title . }
+        OPTIONAL { ?instanceUri dct:creator ?creator . }
+        OPTIONAL { ?instanceUri ext:lastModifiedBy ?lastModifier . }
+
+        FILTER(?revisionModifiedDate ?revisionModifiedDate . >= ${sparqlEscapeDateTime(since)})
+        FILTER(?reviewStatus IN (
+          <http://lblod.data.gift/concepts/review-status/concept-gewijzigd>,
+          <http://lblod.data.gift/concepts/review-status/concept-gearchiveerd>
+        ))
+      }
+
+      OPTIONAL {
+        GRAPH ${orgGraph(orgUuid)} {
+          ?creator foaf:firstName ?creatorFirstName ;
+                   foaf:familyName ?creatorFamilyName .
+        }
+      }
+
+      OPTIONAL {
+        GRAPH ${orgGraph(orgUuid)} {
+          ?lastModifier foaf:firstName ?lastModifierFirstName ;
+                        foaf:familyName ?lastModifierFamilyName .
+        }
+      }
+    }
   `;
 
 
