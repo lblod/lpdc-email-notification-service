@@ -27,7 +27,6 @@ export async function getActiveSubscriptions(frequency) {
                       ext:emailAddress ?emailAddress ;
                       ext:organizationUuid ?organizationUuid ;
                       ext:subscriptionFrequency ${sparqlEscapeString(frequency)} ;
-                      ext:scope ?scope ;
                       ext:statusReportEnabled ?statusReportEnabled ;
                       lpdcExt:notifyFeedback ?notifyFeedback ;
                       lpdcExt:notifyReviewStatus ?notifyReviewNeeded ;
