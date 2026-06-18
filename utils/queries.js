@@ -75,7 +75,7 @@ export async function getFeedbackChanges(instanceUris, since, orgUuid) {
     .join(" ");
   const queryString = `
     ${PREFIXES}
-    SELECT ?instanceUri ?title ?creator ?feedbackModifiedDate ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName ?feedbackText ?feedbackOrganizationLabel ?feedbackDate WHERE {
+    SELECT DISTINCT ?instanceUri ?title ?creator ?feedbackModifiedDate ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName ?feedbackText ?feedbackOrganizationLabel ?feedbackDate WHERE {
           GRAPH ${userGraph(orgUuid)} {
             VALUES ?instanceUri { ${escapedUri} }
 
