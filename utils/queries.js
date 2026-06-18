@@ -17,16 +17,28 @@ import { userGraph, orgGraph } from "./utils";
 export async function getActiveSubscriptions(frequency) {
   const queryString = `
    ${PREFIXES}
-    SELECT ?subscription ?instanceUri ?emailAddress ?orgUuid ?lastNotifiedAt WHERE {
+    SELECT ?subscription ?instanceUri ?emailAddress ?organizationUuid
+          ?scope ?statusReportEnabled ?lastNotifiedAt
+          ?notifyFeedback ?notifyReviewNeeded ?notifyUJe
+    WHERE {
       GRAPH ?g {
         ?subscription a ext:Subscription ;
-                      ext:instanceUri ?instanceUri ;
                       ext:subscriptionActive true ;
                       ext:emailAddress ?emailAddress ;
-                      ext:orgUuid ?orgUuid ;
-                      ext:subscriptionFrequency ${sparqlEscapeString(frequency)} .
-        OPTIONAL { ?subscription ext:lastNotifiedAt ?lastNotifiedAt . }
+                      ext:organizationUuid ?organizationUuid ;
+                      ext:subscriptionFrequency ${sparqlEscapeString(frequency)} ;
+                      ext:scope ?scope ;
+                      ext:statusReportEnabled ?statusReportEnabled ;
+                      ext:notifyFeedback ?notifyFeedback ;
+                      ext:notifyReviewNeeded ?notifyReviewNeeded ;
+                      ext:notifyUJe ?notifyUJe ;
+                      ext:subscriptionInstance ?instanceUri .
+
+        OPTIONAL {
+          ?subscription ext:lastNotifiedAt ?lastNotifiedAt .
+        }
       }
+
       FILTER STRSTARTS(str(?g), "http://mu.semte.ch/graphs/organizations/")
       FILTER STRENDS(str(?g), "/LoketLB-LPDCGebruiker")
     }
