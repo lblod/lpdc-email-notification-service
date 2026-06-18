@@ -17,17 +17,17 @@ import { userGraph, orgGraph } from "./utils";
 export async function getActiveSubscriptions(frequency) {
   const queryString = `
    ${PREFIXES}
-    SELECT ?subscription ?instanceUri ?emailAddress ?organizationUuid
-          ?scope ?statusReportEnabled ?lastNotifiedAt
+    SELECT ?subscription ?instanceUri ?emailAddress
+          ?statusReportEnabled ?lastNotifiedAt
           ?notifyFeedback ?notifyReviewNeeded ?notifyUJe
     WHERE {
       GRAPH ?g {
         ?subscription a ext:Subscription ;
                       ext:subscriptionActive true ;
                       ext:emailAddress ?emailAddress ;
-                      ext:organizationUuid ?organizationUuid ;
                       ext:subscriptionFrequency ${sparqlEscapeString(frequency)} ;
-                      ext:statusReportEnabled ?statusReportEnabled ;
+                      ext:orgUuid ; # Should be gone later
+                      lpdcExt:statusReportEnabled ?statusReportEnabled ;
                       lpdcExt:notifyFeedback ?notifyFeedback ;
                       lpdcExt:notifyReviewStatus ?notifyReviewNeeded ;
                       lpdcExt:notifyUJe ?notifyUJe .
