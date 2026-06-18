@@ -29,13 +29,16 @@ export async function getActiveSubscriptions(frequency) {
                       ext:subscriptionFrequency ${sparqlEscapeString(frequency)} ;
                       ext:scope ?scope ;
                       ext:statusReportEnabled ?statusReportEnabled ;
-                      ext:notifyFeedback ?notifyFeedback ;
-                      ext:notifyReviewNeeded ?notifyReviewNeeded ;
-                      ext:notifyUJe ?notifyUJe ;
-                      ext:subscriptionInstance ?instanceUri .
+                      lpdcExt:notifyFeedback ?notifyFeedback ;
+                      lpdcExt:notifyReviewStatus ?notifyReviewNeeded ;
+                      lpdcExt:notifyUJe ?notifyUJe .
+        
+        OPTIONAL {
+          ?subscription ext:subscriptionInstance ?instanceUri .
+        }
 
         OPTIONAL {
-          ?subscription ext:lastNotifiedAt ?lastNotifiedAt .
+          ?subscription lpdcExt:lastNotifiedAt ?lastNotifiedAt .
         }
       }
 
