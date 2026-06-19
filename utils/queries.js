@@ -17,32 +17,29 @@ import { userGraph, orgGraph } from "./utils";
 export async function getActiveSubscriptions(frequency) {
   const queryString = `
    ${PREFIXES}
-    SELECT ?subscription ?instanceUri ?emailAddress
+    SELECT ?notificationPreference ?instanceUri ?emailAddress
           ?statusReportEnabled ?lastNotifiedAt
-          ?notifyFeedback ?notifyReviewNeeded ?notifyUJe
+          ?notifyFeedback ?notifyReviewNeeded ?notifyFormalInformal
     WHERE {
       GRAPH ?g {
-        ?subscription a ext:Subscription ;
-                      ext:subscriptionActive true ;
-                      ext:emailAddress ?emailAddress ;
-                      ext:subscriptionFrequency ${sparqlEscapeString(frequency)} ;
-                      ext:orgUuid ; # Should be gone later
-                      lpdcExt:statusReportEnabled ?statusReportEnabled ;
-                      lpdcExt:notifyFeedback ?notifyFeedback ;
-                      lpdcExt:notifyReviewStatus ?notifyReviewNeeded ;
-                      lpdcExt:notifyUJe ?notifyUJe .
-        
+        ?notificationPreference a ext:NotificationPreference ;
+                                ext:mailAdresVoorNotificaties ?emailAddress ;
+                                ext:notificationFrequency ${sparqlEscapeString(frequency)} ;
+                                lpdcExt:statusReportEnabled ?statusReportEnabled ;
+                                lpdcExt:notifyFeedback ?notifyFeedback ;
+                                lpdcExt:notifyReviewStatus ?notifyReviewNeeded ;
+                                lpdcExt:notifyFormalInformal ?notifyFormalInformal .
+
         OPTIONAL {
-          ?subscription ext:subscriptionInstance ?instanceUri .
+          ?notificationPreference ext:notificationInstance ?instanceUri .
         }
 
         OPTIONAL {
-          ?subscription lpdcExt:lastNotifiedAt ?lastNotifiedAt .
+          ?notificationPreference lpdcExt:lastNotifiedAt ?lastNotifiedAt .
         }
       }
 
       FILTER STRSTARTS(str(?g), "http://mu.semte.ch/graphs/organizations/")
-      FILTER STRENDS(str(?g), "/LoketLB-LPDCGebruiker")
     }
    `;
 
