@@ -13,8 +13,8 @@ import {
 import { PREFIXES, FEEDBACK_STATUS, SERVICE_URI } from "./constants";
 import { userGraph, orgGraph } from "./utils";
 
-// TODO: Quick mock function, to be replaced with actual implementation once subscription data model is defined
-export async function getActiveSubscriptions(frequency) {
+// TODO: Gebruikersinfo (bestuurseenheid, wil mail ontvangen en linked notification preference)
+export async function getActiveNotificationPreferences(frequency) {
   const queryString = `
    ${PREFIXES}
     SELECT ?notificationPreference ?instanceUri ?emailAddress
@@ -40,6 +40,7 @@ export async function getActiveSubscriptions(frequency) {
       }
 
       FILTER STRSTARTS(str(?g), "http://mu.semte.ch/graphs/organizations/")
+      FILTER STRENDS(STR(?g), "/LoketLB-LPDCGebruiker")
     }
    `;
 
@@ -49,20 +50,31 @@ export async function getActiveSubscriptions(frequency) {
   // Group by subscription URI, as there can be multiple instanceUris per subscription
   const map = new Map();
   for (const binding of bindings) {
-    const uri = binding.subscription.value;
+    const uri = binding.notificationPreference.value;
     if (!map.has(uri)) {
       map.set(uri, {
         uri,
         frequency,
         emailAddress: binding.emailAddress.value,
-        lastNotifiedAt: binding.lastNotifiedAt?.value,
-        orgUuid: binding.orgUuid?.value,
+        lastNotifiedAt: binding.lastNotifiedAt?.value
+          ? new Date(binding.lastNotifiedAt.value)
+          : null,
+        notifyFeedback: binding.notifyFeedback?.value === "true",
+        notifyReviewNeeded: binding.notifyReviewNeeded?.value === "true",
+        notifyFormalInformal: binding.notifyFormalInformal?.value === "true",
         instanceUris: [],
       });
     }
-    map.get(uri).instanceUris.push(binding.instanceUri.value);
+
+    if (binding.instanceUri?.value) {
+      map.get(uri).instanceUris.push(binding.instanceUri.value);
+    }
   }
-  console.log('Finished grouping the subscriptions by URI, result:', Array.from(map.values()));
+
+  console.log(
+    "Finished grouping the subscriptions by URI, result:",
+    Array.from(map.values()),
+  );
   return Array.from(map.values());
 }
 
@@ -291,27 +303,26 @@ export async function getReviewStatusChanges(instanceUris, since, orgUuid) {
   });
 }
 
-// TODO: subject to change once subscription data model is defined
 export async function updateLastNotifiedAt(subscriptionUri, date) {
   const queryString = `
     ${PREFIXES}
     DELETE {
       GRAPH ?g {
-        ${sparqlEscapeUri(subscriptionUri)} ext:lastNotifiedAt ?oldTime .
+        ${sparqlEscapeUri(subscriptionUri)} lpdcExt:lastNotifiedAt ?oldTime .
       }
     }
     INSERT {
       GRAPH ?g {
-        ${sparqlEscapeUri(subscriptionUri)} ext:lastNotifiedAt ${sparqlEscapeDateTime(date)} .
+        ${sparqlEscapeUri(subscriptionUri)} lpdcExt:lastNotifiedAt ${sparqlEscapeDateTime(date)} .
       }
     }
     WHERE {
       GRAPH ?g {
-        ${sparqlEscapeUri(subscriptionUri)} a ext:Subscription .
-        OPTIONAL { ${sparqlEscapeUri(subscriptionUri)} ext:lastNotifiedAt ?oldTime . }
+        ${sparqlEscapeUri(subscriptionUri)} a ext:NotificationPreference .
+        OPTIONAL { ${sparqlEscapeUri(subscriptionUri)} lpdcExt:lastNotifiedAt ?oldTime . }
       }
-      FILTER STRSTARTS(str(?g), "http://mu.semte.ch/graphs/organizations/")
-      FILTER STRENDS(str(?g), "/LoketLB-LPDCGebruiker")
+      FILTER STRSTARTS(STR(?g), "http://mu.semte.ch/graphs/organizations/")
+      FILTER STRENDS(STR(?g), "/LoketLB-LPDCGebruiker")
     }
   `;
   await update(queryString);
