@@ -18,24 +18,24 @@ export async function getActiveNotificationPreferences(frequency) {
   const queryString = `
    ${PREFIXES}
     SELECT ?notificationPreference ?instanceUri ?emailAddress
-          ?lastNotifiedAt ?notifyFeedback ?notifyReviewNeeded ?notifyFormalInformal
-          ?wilMailOntvangen ?bestuurseenheid
+          ?lastNotifiedAt ?ruleLabel ?bestuurseenheid
     WHERE {
       GRAPH ?g {
         ?gebruiker a foaf:Person ;
-                  ext:wilMailOntvangen ?wilMailOntvangen ;
                   foaf:member ?bestuurseenheid ;
                   lpdcExt:hasNotificationPreference ?notificationPreference .
 
-        ?notificationPreference a ext:NotificationPreference ;
-                                ext:mailAdresVoorNotificaties ?emailAddress ;
-                                ext:notificationFrequency ${sparqlEscapeString(frequency)} ;
-                                lpdcExt:notifyFeedback ?notifyFeedback ;
-                                lpdcExt:notifyReviewStatus ?notifyReviewNeeded ;
-                                lpdcExt:notifyFormalInformal ?notifyFormalInformal .
+        ?notificationPreference a lpdcExt:NotificationPreference ;
+                                schema:email ?emailAddress ;
+                                lpdcExt:hasNotificationRuleConfig ?ruleConfig .
+
+        ?ruleConfig lpdcExt:notificationFrequency ${sparqlEscapeString(frequency)} ;
+                    lpdcExt:hasEnabledRule ?rule .
+
+        ?rule skos:prefLabel ?ruleLabel .
 
         OPTIONAL {
-          ?notificationPreference ext:notificationInstance ?instanceUri .
+          ?notificationPreference lpdcExt:notificationInstance ?instanceUri .
         }
 
         OPTIONAL {
@@ -45,7 +45,6 @@ export async function getActiveNotificationPreferences(frequency) {
 
       FILTER STRSTARTS(STR(?g), "http://mu.semte.ch/graphs/organizations/")
       FILTER STRENDS(STR(?g), "/LoketLB-LPDCGebruiker")
-      FILTER(?wilMailOntvangen = true)
     }
    `;
 
@@ -65,9 +64,6 @@ export async function getActiveNotificationPreferences(frequency) {
         ? new Date(binding.lastNotifiedAt.value)
         : null,
       bestuurseenheidUri: binding.bestuurseenheid?.value,
-      notifyFeedback: binding.notifyFeedback?.value === "true",
-      notifyReviewNeeded: binding.notifyReviewNeeded?.value === "true",
-      notifyFormalInformal: binding.notifyFormalInformal?.value === "true",
       instanceUris: [],
     });
     }
@@ -82,7 +78,7 @@ export async function getActiveNotificationPreferences(frequency) {
     Array.from(map.values()),
   );
   return Array.from(map.values());
-}
+  }
 
 export async function getFeedbackChanges(instanceUris, since, orgUuid) {
   if (!instanceUris || instanceUris.length === 0) return [];
