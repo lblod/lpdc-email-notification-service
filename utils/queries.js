@@ -29,7 +29,7 @@ import { userGraph, orgGraph, getUUIDFromUri } from "./utils";
 export async function getActiveNotificationPreferences() {
   const queryString = `
    ${PREFIXES}
-    SELECT ?notificationPreference ?instanceUri ?emailAddress ?frequency
+    SELECT DISTINCT ?notificationPreference ?instanceUri ?emailAddress ?frequency
           ?lastNotifiedAt ?ruleLabel ?bestuurseenheid ?gebruikerFirstName ?gebruikerFamilyName
     WHERE {
       GRAPH ?orgGraph {
@@ -80,6 +80,7 @@ export async function getActiveNotificationPreferences() {
         uri,
         emailAddress: binding.emailAddress.value,
         frequency: binding.frequency.value,
+        ruleLabels: [],
         lastNotifiedAt: binding.lastNotifiedAt?.value
           ? new Date(binding.lastNotifiedAt.value)
           : null,
@@ -87,6 +88,13 @@ export async function getActiveNotificationPreferences() {
         targetLabel: gebruikerFullName,
         instanceUris: [],
       });
+    }
+
+    if (binding.ruleLabel?.value) {
+      const labels = map.get(uri).ruleLabels;
+      if (!labels.includes(binding.ruleLabel.value)) {
+        labels.push(binding.ruleLabel.value);
+      }
     }
 
     if (binding.instanceUri?.value) {
