@@ -11,11 +11,6 @@ new CronJob(CRON_FREQUENCY, async () => {
   ]);
 });
 
-// For testing, run immediately
-(async () => {
-  await processNotifications();
-})();
-
 app.use(
   bodyParser.json({
     type: function (req) {
