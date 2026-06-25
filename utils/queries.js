@@ -107,12 +107,12 @@ export async function getFeedbackChanges(instanceUris, since, orgUuid) {
   const escapedUris = instanceUris.map((uri) => sparqlEscapeUri(uri)).join(" ");
   const queryString = `
     ${PREFIXES}
-    SELECT DISTINCT ?instanceUri ?title ?creator ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName ?feedbackText ?feedbackOrganizationLabel ?feedbackDate WHERE {
+    SELECT DISTINCT ?instanceUri ?title ?feedbackModifiedDate ?creator ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName ?feedbackText ?feedbackOrganizationLabel ?feedbackDate WHERE {
           GRAPH ${userGraph(orgUuid)} {
             VALUES ?instanceUri { ${escapedUris} }
 
-            ?instanceUri lpdcExt:feedbackAvailable true .
-            #             ext:feedbackModifiedDate ?feedbackModifiedDate .
+            ?instanceUri lpdcExt:feedbackAvailable true ;
+                         lpdcExt:feedbackModifiedDate ?feedbackModifiedDate .
             OPTIONAL {
               ?instanceUri dct:title ?title .
             }
@@ -138,7 +138,7 @@ export async function getFeedbackChanges(instanceUris, since, orgUuid) {
 
               FILTER (?newerFeedbackDate > ?feedbackDate || (?newerFeedbackDate = ?feedbackDate && str(?newerFeedback) > str(?feedback)))
             }
-            #FILTER(?feedbackModifiedDate >= ${sparqlEscapeDateTime(since)})
+            FILTER(?feedbackModifiedDate >= ${sparqlEscapeDateTime(since)})
           }
           OPTIONAL {
             GRAPH ${orgGraph(orgUuid)} {
@@ -178,7 +178,7 @@ export async function getFeedbackChanges(instanceUris, since, orgUuid) {
       feedbackText: binding.feedbackText?.value || "",
       feedbackOrganization:
         binding.feedbackOrganizationLabel?.value || "Onbekend",
-      feedbackModifiedDate: new Date(),
+      feedbackModifiedDate: new Date(binding.feedbackModifiedDate.value),
       feedbackDate: new Date(binding.feedbackDate?.value),
     };
   });
@@ -340,7 +340,7 @@ export async function updateLastNotifiedAt(subscriptionUri, date) {
     }
     WHERE {
       GRAPH ?g {
-        ${sparqlEscapeUri(subscriptionUri)} a ext:NotificationPreference .
+        ${sparqlEscapeUri(subscriptionUri)} a lpdcExt:NotificationPreference .
         OPTIONAL { ${sparqlEscapeUri(subscriptionUri)} lpdcExt:lastNotifiedAt ?oldTime . }
       }
       FILTER STRSTARTS(STR(?g), "http://mu.semte.ch/graphs/organizations/")
