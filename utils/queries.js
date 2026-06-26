@@ -200,27 +200,35 @@ export async function getFormalInformalChanges(instanceUris, since, orgUuid) {
         VALUES ?instanceUri { ${escapedUris} }
 
         ?instanceUri lpdcExt:needsConversionFromFormalToInformal true ;
-                     lpdcExt:dutchLanguageVariant ?dutchLanguageVariant ;
-                     lpdcExt:formalInformalModifiedDate ?formalInformalModifiedDate .
+                    lpdcExt:dutchLanguageVariant ?dutchLanguageVariant ;
+                    lpdcExt:formalInformalModifiedDate ?formalInformalModifiedDate .
 
         OPTIONAL { ?instanceUri dct:title ?title . }
-        OPTIONAL { ?instanceUri dct:creator ?creator . }
-        OPTIONAL { ?instanceUri ext:lastModifiedBy ?lastModifier . }
 
         FILTER(?formalInformalModifiedDate >= ${sparqlEscapeDateTime(since)})
       }
 
       OPTIONAL {
+        GRAPH ${userGraph(orgUuid)} {
+          ?instanceUri dct:creator ?creator .
+        }
         GRAPH ${orgGraph(orgUuid)} {
-          ?creator foaf:firstName ?creatorFirstName ;
-                   foaf:familyName ?creatorFamilyName .
+          OPTIONAL {
+            ?creator foaf:firstName ?creatorFirstName ;
+                    foaf:familyName ?creatorFamilyName .
+          }
         }
       }
 
       OPTIONAL {
+        GRAPH ${userGraph(orgUuid)} {
+          ?instanceUri ext:lastModifiedBy ?lastModifier .
+        }
         GRAPH ${orgGraph(orgUuid)} {
-          ?lastModifier foaf:firstName ?lastModifierFirstName ;
-                        foaf:familyName ?lastModifierFamilyName .
+          OPTIONAL {
+            ?lastModifier foaf:firstName ?lastModifierFirstName ;
+                          foaf:familyName ?lastModifierFamilyName .
+          }
         }
       }
     }
@@ -261,17 +269,17 @@ export async function getReviewStatusChanges(instanceUris, since, orgUuid) {
         VALUES ?instanceUri { ${escapedUris} }
 
         ?instanceUri ext:reviewStatus ?status ;
-                     schema:productID ?productID ;
-                     lpdcExt:reviewStatusModifiedDate ?reviewStatusModifiedDate .
+                    schema:productID ?productID ;
+                    lpdcExt:reviewStatusModifiedDate ?reviewStatusModifiedDate .
 
         OPTIONAL { ?instanceUri dct:title ?title . }
-        OPTIONAL { ?instanceUri dct:creator ?creator . }
-        OPTIONAL { ?instanceUri ext:lastModifiedBy ?lastModifier . }
         OPTIONAL { ?instanceUri ext:versionedSource ?versionedSource . }
         OPTIONAL { ?instanceUri lpdcExt:dutchLanguageVariant ?dutchLanguageVariant . }
 
-        OPTIONAL { ?instanceUri dct:source ?source .
-                   ?source lpdc:hasLatestFunctionalChange ?hasLatestFunctionalChange .}
+        OPTIONAL {
+          ?instanceUri dct:source ?source .
+          ?source lpdc:hasLatestFunctionalChange ?hasLatestFunctionalChange .
+        }
 
         FILTER(?reviewStatusModifiedDate >= ${sparqlEscapeDateTime(since)})
         FILTER(?status IN (
@@ -281,16 +289,26 @@ export async function getReviewStatusChanges(instanceUris, since, orgUuid) {
       }
 
       OPTIONAL {
+        GRAPH ${userGraph(orgUuid)} {
+          ?instanceUri dct:creator ?creator .
+        }
         GRAPH ${orgGraph(orgUuid)} {
-          ?creator foaf:firstName ?creatorFirstName ;
-                   foaf:familyName ?creatorFamilyName .
+          OPTIONAL {
+            ?creator foaf:firstName ?creatorFirstName ;
+                    foaf:familyName ?creatorFamilyName .
+          }
         }
       }
 
       OPTIONAL {
+        GRAPH ${userGraph(orgUuid)} {
+          ?instanceUri ext:lastModifiedBy ?lastModifier .
+        }
         GRAPH ${orgGraph(orgUuid)} {
-          ?lastModifier foaf:firstName ?lastModifierFirstName ;
-                        foaf:familyName ?lastModifierFamilyName .
+          OPTIONAL {
+            ?lastModifier foaf:firstName ?lastModifierFirstName ;
+                          foaf:familyName ?lastModifierFamilyName .
+          }
         }
       }
     }
