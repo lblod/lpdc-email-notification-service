@@ -30,7 +30,7 @@ export async function getActiveNotificationPreferences() {
   const queryString = `
    ${PREFIXES}
     SELECT DISTINCT ?notificationPreference ?instanceUri ?emailAddress ?frequency
-          ?lastNotifiedAt ?ruleLabel ?bestuurseenheid ?gebruikerFirstName ?gebruikerFamilyName
+          ?lastNotifiedAt ?rule ?bestuurseenheid ?gebruikerFirstName ?gebruikerFamilyName
     WHERE {
       GRAPH ?orgGraph {
         ?gebruiker a foaf:Person ;
@@ -58,10 +58,6 @@ export async function getActiveNotificationPreferences() {
       FILTER STRSTARTS(STR(?userGraph), "http://mu.semte.ch/graphs/organizations/")
       FILTER STRENDS(STR(?userGraph), "/LoketLB-LPDCGebruiker")
       FILTER STRSTARTS(STR(?orgGraph), "http://mu.semte.ch/graphs/organizations/")
-
-      GRAPH <http://mu.semte.ch/graphs/public> {
-        ?rule skos:prefLabel ?ruleLabel .
-      }
     }
    `;
 
@@ -80,7 +76,7 @@ export async function getActiveNotificationPreferences() {
         uri,
         emailAddress: binding.emailAddress.value,
         frequency: binding.frequency.value,
-        ruleLabels: [],
+        enabledRules: [],
         lastNotifiedAt: binding.lastNotifiedAt?.value
           ? new Date(binding.lastNotifiedAt.value)
           : null,
@@ -90,10 +86,10 @@ export async function getActiveNotificationPreferences() {
       });
     }
 
-    if (binding.ruleLabel?.value) {
-      const labels = map.get(uri).ruleLabels;
-      if (!labels.includes(binding.ruleLabel.value)) {
-        labels.push(binding.ruleLabel.value);
+    if (binding.rule?.value) {
+      const rules = map.get(uri).enabledRules;
+      if (!rules.includes(binding.rule.value)) {
+        rules.push(binding.rule.value);
       }
     }
 

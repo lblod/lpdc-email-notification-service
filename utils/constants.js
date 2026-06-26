@@ -57,6 +57,12 @@ export const JOB_STATUS = {
   FAILED: "http://redpencil.data.gift/id/concept/JobStatus/failed",
 };
 
+export const NOTIFICATION_RULES = {
+  FEEDBACK: "http://lblod.data.gift/concepts/60cd1b30-fa29-4fd9-a618-2f8566153849",
+  HERZIENING: "http://lblod.data.gift/concepts/83d7bade-9b45-4d28-9348-3edcdcf99edc",
+  FORMAL_INFORMAL: "http://lblod.data.gift/concepts/906311f3-f9f0-4b02-80de-d339df39a4ad",
+};
+
 export const SYSTEM_EMAIL_GRAPH = 'http://mu.semte.ch/graphs/system/email';
 export const JOB_OPERATION = 'http://lblod.data.gift/id/jobs/concept/JobOperation/lpdcEmailNotification';
 export const JOB_TYPE = "http://vocab.deri.ie/cogs#Job";
