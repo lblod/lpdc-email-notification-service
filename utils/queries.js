@@ -194,7 +194,7 @@ export async function getFormalInformalChanges(instanceUris, since, orgUuid) {
   const escapedUris = instanceUris.map((uri) => sparqlEscapeUri(uri)).join(" ");
   const queryString = `
     ${PREFIXES}
-    SELECT ?instanceUri ?title ?creator ?formalInformalModifiedDate ?dutchLanguageVariant ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName
+    SELECT DISTINCT ?instanceUri ?title ?creator ?formalInformalModifiedDate ?dutchLanguageVariant ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName
     WHERE {
       GRAPH ${userGraph(orgUuid)} {
         VALUES ?instanceUri { ${escapedUris} }
@@ -255,7 +255,7 @@ export async function getReviewStatusChanges(instanceUris, since, orgUuid) {
   const escapedUris = instanceUris.map((uri) => sparqlEscapeUri(uri)).join(" ");
   const queryString = `
     ${PREFIXES}
-    SELECT DISTINCT ?instanceUri ?title ?creator ?status ?productID ?reviewStatusModifiedDate ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName ?versionedSource ?hasLatestFunctionalChange
+    SELECT DISTINCT ?instanceUri ?title ?creator ?status ?productID ?dutchLanguageVariant ?reviewStatusModifiedDate ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName ?versionedSource ?hasLatestFunctionalChange
     WHERE {
       GRAPH ${userGraph(orgUuid)} {
         VALUES ?instanceUri { ${escapedUris} }
@@ -268,6 +268,7 @@ export async function getReviewStatusChanges(instanceUris, since, orgUuid) {
         OPTIONAL { ?instanceUri dct:creator ?creator . }
         OPTIONAL { ?instanceUri ext:lastModifiedBy ?lastModifier . }
         OPTIONAL { ?instanceUri ext:versionedSource ?versionedSource . }
+        OPTIONAL { ?instanceUri lpdcExt:dutchLanguageVariant ?dutchLanguageVariant . }
 
         OPTIONAL { ?instanceUri dct:source ?source .
                    ?source lpdc:hasLatestFunctionalChange ?hasLatestFunctionalChange .}
@@ -318,6 +319,7 @@ export async function getReviewStatusChanges(instanceUris, since, orgUuid) {
       productID: binding.productID.value,
       creator: creatorFullName || "Onbekend",
       lastModifier: modifierFullName || "Onbekend",
+      dutchLanguageVariant: binding.dutchLanguageVariant?.value || "",
       status: statusMap[binding.status?.value],
       versionedSource: binding.versionedSource?.value || "Onbekend",
       hasLatestFunctionalChange:
@@ -474,7 +476,7 @@ export async function addError(jobUri, error) {
         ${sparqlEscapeUri(jobUri)} task:error ${sparqlEscapeUri(errorUri)} .
         ${sparqlEscapeUri(errorUri)} a oslc:Error ;
           mu:uuid ${sparqlEscapeString(errorUuid)} ;
-          oslc:message ${sparqlEscapeString(error)} .
+          oslc:message ${sparqlEscapeString(error.message)} .
       }
     }
   `;
