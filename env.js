@@ -15,10 +15,6 @@ const FROM_EMAIL_ADDRESS = env
     "Agentschap Binnenlands Bestuur Vlaanderen <noreply-binnenland@vlaanderen.be>",
   )
   .asString();
-const SYSTEM_EMAIL_GRAPH = env
-  .get("SYSTEM_EMAIL_GRAPH")
-  .default("http://mu.semte.ch/graphs/system/email")
-  .asString();
 const OUTBOX_FOLDER_URI = env
   .get("OUTBOX_FOLDER_URI")
   .default("http://data.lblod.info/id/mail-folders/2")
@@ -29,6 +25,5 @@ export {
   IPDC_URL,
   CRON_FREQUENCY,
   FROM_EMAIL_ADDRESS,
-  SYSTEM_EMAIL_GRAPH,
   OUTBOX_FOLDER_URI,
 };

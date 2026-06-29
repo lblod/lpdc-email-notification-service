@@ -1,6 +1,5 @@
 export const PREFIXES = `
   PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-  PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
   PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
   PREFIX cpsv: <http://purl.org/vocab/cpsv#>
   PREFIX dct: <http://purl.org/dc/terms/>
@@ -30,6 +29,7 @@ export const PREFIXES = `
   PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
   PREFIX oslc: <http://open-services.net/ns/core#>
   PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
+  PREFIX task: <http://redpencil.data.gift/vocabularies/tasks/>
 `;
 
 export const FEEDBACK_STATUS = {
@@ -48,3 +48,26 @@ export const FREQUENCIES = {
   WEEKLY: "weekly",
   MONTHLY: "monthly",
 };
+
+export const JOB_STATUS = {
+  PREPARING: "http://redpencil.data.gift/id/concept/JobStatus/preparing",
+  BUSY: "http://redpencil.data.gift/id/concept/JobStatus/busy",
+  SCHEDULED: "http://redpencil.data.gift/id/concept/JobStatus/scheduled",
+  SUCCESS: "http://redpencil.data.gift/id/concept/JobStatus/success",
+  FAILED: "http://redpencil.data.gift/id/concept/JobStatus/failed",
+};
+
+export const NOTIFICATION_RULES = {
+  FEEDBACK: "http://lblod.data.gift/concepts/60cd1b30-fa29-4fd9-a618-2f8566153849",
+  HERZIENING: "http://lblod.data.gift/concepts/83d7bade-9b45-4d28-9348-3edcdcf99edc",
+  FORMAL_INFORMAL: "http://lblod.data.gift/concepts/906311f3-f9f0-4b02-80de-d339df39a4ad",
+};
+
+export const SYSTEM_EMAIL_GRAPH = 'http://mu.semte.ch/graphs/system/email';
+export const JOB_OPERATION = 'http://lblod.data.gift/id/jobs/concept/JobOperation/lpdcEmailNotification';
+export const JOB_TYPE = "http://vocab.deri.ie/cogs#Job";
+export const JOB_GRAPH = "http://mu.semte.ch/graphs/system/jobs"
+export const TASK_TYPE = 'http://redpencil.data.gift/vocabularies/tasks/Task';
+export const JOB_URI_PREFIX = 'http://redpencil.data.gift/id/job/';
+export const TASK_URI_PREFIX = 'http://redpencil.data.gift/id/task/';
+export const ERROR_URI_PREFIX = 'http://redpencil.data.gift/id/jobs/error/';
