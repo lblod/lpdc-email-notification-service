@@ -6,7 +6,7 @@ const LPDC_URL = env
   .asString();
 const IPDC_URL = env
   .get("IPDC_URL")
-  .default("https://productcatalogus.ipdc.vlaanderen.be")
+  .default("https://productcatalogus.ipdc.tni-vlaanderen.be")
   .asString();
 const CRON_FREQUENCY = env.get("CRON_FREQUENCY").default("0 8 * * *").asString();
 const FROM_EMAIL_ADDRESS = env

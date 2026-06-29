@@ -47,3 +47,12 @@ export function stripHtmlAndTruncate(htmlString, maxLength = 100) {
 
   return cleanText;
 }
+
+export function buildIpdcCompareUrl(ipdcUrl, productID, dutchLanguageVariant, versionedSource, hasLatestFunctionalChange) {
+  const languageVersion = dutchLanguageVariant?.toLowerCase() === "nl-be-x-informal"
+    ? "nl/informeel"
+    : "nl";
+  const publicServiceSnapshot = getUUIDFromUri(versionedSource);
+  const latestSnapshot = getUUIDFromUri(hasLatestFunctionalChange);
+  return `${ipdcUrl}/${languageVersion}/concept/${productID}/revisie/vergelijk?revisie1=${publicServiceSnapshot}&revisie2=${latestSnapshot}`;
+}

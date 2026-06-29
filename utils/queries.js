@@ -94,7 +94,10 @@ export async function getActiveNotificationPreferences() {
     }
 
     if (binding.instanceUri?.value) {
-      map.get(uri).instanceUris.push(binding.instanceUri.value);
+      const instanceUris = map.get(uri).instanceUris;
+      if (!instanceUris.includes(binding.instanceUri.value)) {
+        instanceUris.push(binding.instanceUri.value);
+      }
     }
   }
 
@@ -273,19 +276,21 @@ export async function getReviewStatusChanges(instanceUris, since, orgUuid) {
                     lpdcExt:reviewStatusModifiedDate ?reviewStatusModifiedDate .
 
         OPTIONAL { ?instanceUri dct:title ?title . }
-        OPTIONAL { ?instanceUri ext:versionedSource ?versionedSource . }
+        OPTIONAL { ?instanceUri ext:hasVersionedSource ?versionedSource . }
         OPTIONAL { ?instanceUri lpdcExt:dutchLanguageVariant ?dutchLanguageVariant . }
-
-        OPTIONAL {
-          ?instanceUri dct:source ?source .
-          ?source lpdc:hasLatestFunctionalChange ?hasLatestFunctionalChange .
-        }
+        OPTIONAL { ?instanceUri dct:source ?source . }
 
         FILTER(?reviewStatusModifiedDate >= ${sparqlEscapeDateTime(since)})
         FILTER(?status IN (
           <http://lblod.data.gift/concepts/review-status/concept-gewijzigd>,
           <http://lblod.data.gift/concepts/review-status/concept-gearchiveerd>
         ))
+      }
+
+      OPTIONAL {
+        GRAPH <http://mu.semte.ch/graphs/public> {
+          ?source lpdc:hasLatestFunctionalChange ?hasLatestFunctionalChange .
+        }
       }
 
       OPTIONAL {
