@@ -30,6 +30,7 @@ export const PREFIXES = `
   PREFIX oslc: <http://open-services.net/ns/core#>
   PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
   PREFIX task: <http://redpencil.data.gift/vocabularies/tasks/>
+  PREFIX org: <http://www.w3.org/ns/org#>
 `;
 
 export const FEEDBACK_STATUS = {

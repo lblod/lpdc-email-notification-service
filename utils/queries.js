@@ -29,7 +29,7 @@ export async function getActiveNotificationPreferences() {
   const queryString = `
    ${PREFIXES}
     SELECT DISTINCT ?notificationPreference ?instanceUri ?emailAddress ?frequency
-          ?lastNotifiedAt ?rule ?bestuurseenheid ?gebruikerFirstName ?gebruikerFamilyName
+          ?lastNotifiedAt ?rule ?bestuurseenheid ?bestuurseenheidDisplayLabel ?gebruikerFirstName ?gebruikerFamilyName
     WHERE {
       GRAPH ?orgGraph {
         ?gebruiker a foaf:Person ;
@@ -38,6 +38,19 @@ export async function getActiveNotificationPreferences() {
                   foaf:familyName ?gebruikerFamilyName;
                   lpdcExt:hasNotificationPreference ?notificationPreference .
       }
+      OPTIONAL {
+        GRAPH ?labelGraph {
+          ?bestuurseenheid skos:prefLabel ?bestuurseenheidLabel ;
+                          org:classification ?classification .
+
+          ?classification skos:prefLabel ?classificationLabel .
+        }
+
+        BIND(
+          CONCAT(?classificationLabel, " ", ?bestuurseenheidLabel)
+          AS ?bestuurseenheidDisplayLabel
+        )
+      }           
       GRAPH ?userGraph {
         ?notificationPreference a lpdcExt:NotificationPreference ;
                                 schema:email ?emailAddress ;
@@ -80,6 +93,7 @@ export async function getActiveNotificationPreferences() {
           ? new Date(binding.lastNotifiedAt.value)
           : null,
         orgUuid: getUUIDFromUri(binding.bestuurseenheid.value),
+        bestuurseenheid: binding.bestuurseenheidDisplayLabel.value,
         targetLabel: gebruikerFullName,
         instanceUris: [],
       });
@@ -260,10 +274,47 @@ export async function getFormalInformalChanges(instanceUris, since, orgUuid) {
 }
 
 export async function getStatusReportData(orgUuid) {
-  // TODO: define actual stats to include
+  const queryString = `
+    ${PREFIXES}
+    SELECT
+      (COUNT(DISTINCT ?instance) AS ?totalInstances)
+      (COUNT(DISTINCT ?herzieningInstance) AS ?totalHerziening)
+      (COUNT(DISTINCT ?feedbackInstance) AS ?totalFeedback)
+      (COUNT(DISTINCT ?formalInformalInstance) AS ?totalFormalInformal)
+    WHERE {
+      GRAPH ${userGraph(orgUuid)} {
+        ?instance a lpdcExt:InstancePublicService .
+
+        OPTIONAL {
+          ?herzieningInstance a lpdcExt:InstancePublicService ;
+                              ext:reviewStatus ?reviewStatus .
+          FILTER(?reviewStatus IN (
+            <http://lblod.data.gift/concepts/review-status/concept-gewijzigd>,
+            <http://lblod.data.gift/concepts/review-status/concept-gearchiveerd>
+          ))
+        }
+
+        OPTIONAL {
+          ?feedbackInstance a lpdcExt:InstancePublicService ;
+                            lpdcExt:feedbackAvailable true .
+        }
+
+        OPTIONAL {
+          ?formalInformalInstance a lpdcExt:InstancePublicService ;
+                                  lpdcExt:needsConversionFromFormalToInformal true .
+        }
+      }
+    }
+  `;
+
+  const queryResult = await query(queryString);
+  const binding = queryResult.results?.bindings?.[0];
+
   return {
-    orgUuid,
-    generatedAt: new Date(),
+    totalInstances: parseInt(binding?.totalInstances?.value ?? "0"),
+    totalHerziening: parseInt(binding?.totalHerziening?.value ?? "0"),
+    totalFeedback: parseInt(binding?.totalFeedback?.value ?? "0"),
+    totalFormalInformal: parseInt(binding?.totalFormalInformal?.value ?? "0"),
   };
 }
 
