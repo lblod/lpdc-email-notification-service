@@ -25,7 +25,6 @@ import {
 } from "./constants";
 import { userGraph, orgGraph, getUUIDFromUri } from "./utils";
 
-// TODO: Gebruikersinfo (bestuurseenheid, wil mail ontvangen en linked notification preference)
 export async function getActiveNotificationPreferences() {
   const queryString = `
    ${PREFIXES}
@@ -258,6 +257,14 @@ export async function getFormalInformalChanges(instanceUris, since, orgUuid) {
       ),
     };
   });
+}
+
+export async function getStatusReportData(orgUuid) {
+  // TODO: define actual stats to include
+  return {
+    orgUuid,
+    generatedAt: new Date(),
+  };
 }
 
 export async function getReviewStatusChanges(instanceUris, since, orgUuid) {

@@ -56,3 +56,11 @@ export function buildIpdcCompareUrl(ipdcUrl, productID, dutchLanguageVariant, ve
   const latestSnapshot = getUUIDFromUri(hasLatestFunctionalChange);
   return `${ipdcUrl}/${languageVersion}/concept/${productID}/revisie/vergelijk?revisie1=${publicServiceSnapshot}&revisie2=${latestSnapshot}`;
 }
+
+export function isStatusReportDue() { 
+  const now = new Date();
+  const month = now.getMonth(); 
+  const day = now.getDate();
+  //Jan 1 and Jul 1
+  return (month === 0 && day === 1) || (month === 6 && day === 1);
+}
