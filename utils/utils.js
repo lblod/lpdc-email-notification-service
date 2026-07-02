@@ -62,5 +62,5 @@ export function isStatusReportDue() {
   const month = now.getMonth(); 
   const day = now.getDate();
   //Jan 1 and Jul 1
-  return (month === 0 && day === 1) || (month === 6 && day === 1);
+  return (month === 2 && day === 1) || (month === 8 && day === 1);
 }
