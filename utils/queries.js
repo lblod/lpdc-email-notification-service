@@ -123,12 +123,6 @@ export async function getFeedbackChanges(instanceUris, since, orgUuid) {
             OPTIONAL {
               ?instanceUri dct:title ?title .
             }
-            OPTIONAL {
-              ?instanceUri dct:creator ?creator .
-            }
-            OPTIONAL {
-              ?instanceUri ext:lastModifiedBy ?lastModifier .
-            }
 
             ?feedback skos:primarySubject ?instanceUri;
                       schema2:actionStatus <${FEEDBACK_STATUS.OPEN}>;
@@ -147,18 +141,31 @@ export async function getFeedbackChanges(instanceUris, since, orgUuid) {
             }
             FILTER(?feedbackModifiedDate >= ${sparqlEscapeDateTime(since)})
           }
+
           OPTIONAL {
+            GRAPH ${userGraph(orgUuid)} {
+              ?instanceUri dct:creator ?creator .
+            }
             GRAPH ${orgGraph(orgUuid)} {
-              ?creator foaf:firstName ?creatorFirstName ;
-                      foaf:familyName ?creatorFamilyName .
+              OPTIONAL {
+                ?creator foaf:firstName ?creatorFirstName ;
+                        foaf:familyName ?creatorFamilyName .
+              }
             }
           }
+
           OPTIONAL {
+            GRAPH ${userGraph(orgUuid)} {
+              ?instanceUri ext:lastModifiedBy ?lastModifier .
+            }
             GRAPH ${orgGraph(orgUuid)} {
-              ?lastModifier foaf:firstName ?lastModifierFirstName ;
-                            foaf:familyName ?lastModifierFamilyName .
+              OPTIONAL {
+                ?lastModifier foaf:firstName ?lastModifierFirstName ;
+                              foaf:familyName ?lastModifierFamilyName .
+              }
             }
           }
+
           OPTIONAL {
             GRAPH <http://mu.semte.ch/graphs/public> {
               ?feedbackOrganization skos:prefLabel ?feedbackOrganizationLabel .
