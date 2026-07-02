@@ -48,7 +48,6 @@ export const SERVICE_URI =
 export const FREQUENCIES = {
   WEEKLY: "weekly",
   MONTHLY: "monthly",
-  TWICE_A_YEAR: "twice a year",
 };
 
 export const JOB_STATUS = {

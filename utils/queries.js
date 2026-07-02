@@ -56,8 +56,11 @@ export async function getActiveNotificationPreferences() {
                                 schema:email ?emailAddress ;
                                 lpdcExt:hasNotificationRuleConfig ?ruleConfig .
 
-        ?ruleConfig lpdcExt:notificationFrequency ?frequency ;
-                    lpdcExt:hasEnabledRule ?rule .
+        ?ruleConfig lpdcExt:hasEnabledRule ?rule .
+        
+        OPTIONAL {
+          ?ruleConfig lpdcExt:notificationFrequency ?frequency .
+        }
 
         OPTIONAL {
           ?notificationPreference lpdcExt:notificationInstance ?instanceUri .
