@@ -291,6 +291,7 @@ export async function getStatusReportData(orgUuid) {
       (COUNT(DISTINCT ?herzieningInstance) AS ?totalHerziening)
       (COUNT(DISTINCT ?feedbackInstance) AS ?totalFeedback)
       (COUNT(DISTINCT ?formalInformalInstance) AS ?totalFormalInformal)
+      (COUNT(DISTINCT ?duplicateProductId) AS ?totalDuplicateProductIds)
     WHERE {
       GRAPH ${userGraph(orgUuid)} {
         ?instance a lpdcExt:InstancePublicService .
@@ -313,6 +314,18 @@ export async function getStatusReportData(orgUuid) {
           ?formalInformalInstance a lpdcExt:InstancePublicService ;
                                   lpdcExt:needsConversionFromFormalToInformal true .
         }
+
+        OPTIONAL {
+          {
+            SELECT ?duplicateProductId
+            WHERE {
+              ?instance a lpdcExt:InstancePublicService ;
+                        schema:productID ?duplicateProductId .
+            }
+            GROUP BY ?duplicateProductId
+            HAVING (COUNT(DISTINCT ?instance) > 1)
+          }
+        }
       }
     }
   `;
@@ -325,6 +338,7 @@ export async function getStatusReportData(orgUuid) {
     totalHerziening: parseInt(binding?.totalHerziening?.value ?? "0"),
     totalFeedback: parseInt(binding?.totalFeedback?.value ?? "0"),
     totalFormalInformal: parseInt(binding?.totalFormalInformal?.value ?? "0"),
+    totalDuplicateProductIds: parseInt(binding?.totalDuplicateProductIds?.value ?? "0"),
   };
 }
 
