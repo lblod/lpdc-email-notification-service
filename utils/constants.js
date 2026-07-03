@@ -62,7 +62,7 @@ export const NOTIFICATION_RULES = {
   FEEDBACK: "http://lblod.data.gift/concepts/60cd1b30-fa29-4fd9-a618-2f8566153849",
   HERZIENING: "http://lblod.data.gift/concepts/83d7bade-9b45-4d28-9348-3edcdcf99edc",
   FORMAL_INFORMAL: "http://lblod.data.gift/concepts/906311f3-f9f0-4b02-80de-d339df39a4ad",
-  STATUS_REPORT: "http://lblod.data.gift/concepts/e2dcc9bf-e105-47ab-90ac-5e8119f464bc",
+  STATUS_REPORT: "http://lblod.data.gift/concepts/634522c3-f5bd-4f53-82d3-983b7cbbdb10",
 };
 
 export const SYSTEM_EMAIL_GRAPH = 'http://mu.semte.ch/graphs/system/email';
