@@ -35,8 +35,7 @@ export async function getActiveNotificationPreferences() {
         ?gebruiker a foaf:Person ;
                   foaf:member ?bestuurseenheid ;
                   foaf:firstName ?gebruikerFirstName;
-                  foaf:familyName ?gebruikerFamilyName;
-                  lpdcExt:hasNotificationPreference ?notificationPreference .
+                  foaf:familyName ?gebruikerFamilyName .
       }
       OPTIONAL {
         GRAPH ?labelGraph {
@@ -53,6 +52,7 @@ export async function getActiveNotificationPreferences() {
       }           
       GRAPH ?userGraph {
         ?notificationPreference a lpdcExt:NotificationPreference ;
+                                dct:creator ?gebruiker ;
                                 schema:email ?emailAddress ;
                                 lpdcExt:hasNotificationRuleConfig ?ruleConfig .
 
