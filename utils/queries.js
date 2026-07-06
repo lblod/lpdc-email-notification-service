@@ -284,7 +284,7 @@ export async function getFormalInformalChanges(instanceUris, since, orgUuid) {
 }
 
 export async function getStatusReportData(orgUuid) {
-  const queryString = `
+  const statusQuery = `
     ${PREFIXES}
     SELECT
       (COUNT(DISTINCT ?instance) AS ?totalInstances)
@@ -330,8 +330,39 @@ export async function getStatusReportData(orgUuid) {
     }
   `;
 
-  const queryResult = await query(queryString);
-  const binding = queryResult.results?.bindings?.[0];
+  const duplicateTitlesQuery = `
+    ${PREFIXES}
+
+    SELECT DISTINCT (STR(?title) AS ?title)
+    WHERE {
+      {
+        SELECT ?duplicateProductId
+        WHERE {
+          GRAPH ${userGraph(orgUuid)} {
+            ?instance a lpdcExt:InstancePublicService ;
+                      schema:productID ?duplicateProductId .
+          }
+        }
+        GROUP BY ?duplicateProductId
+        HAVING (COUNT(DISTINCT ?instance) > 1)
+      }
+
+      GRAPH ${userGraph(orgUuid)} {
+        ?instance schema:productID ?duplicateProductId ;
+                  dct:source ?source .
+      }
+
+      ?source dct:title ?title .
+    }
+    ORDER BY ?title
+  `;
+
+  const [statusResult, duplicateTitlesResult] = await Promise.all([
+    query(statusQuery),
+    query(duplicateTitlesQuery),
+  ]);
+
+  const binding = statusResult.results?.bindings?.[0];
 
   return {
     totalInstances: parseInt(binding?.totalInstances?.value ?? "0"),
@@ -339,6 +370,11 @@ export async function getStatusReportData(orgUuid) {
     totalFeedback: parseInt(binding?.totalFeedback?.value ?? "0"),
     totalFormalInformal: parseInt(binding?.totalFormalInformal?.value ?? "0"),
     totalDuplicateProductIds: parseInt(binding?.totalDuplicateProductIds?.value ?? "0"),
+
+    duplicateProductTitles:
+      duplicateTitlesResult.results?.bindings?.map(
+        (binding) => binding.title.value
+      ) ?? [],
   };
 }
 
