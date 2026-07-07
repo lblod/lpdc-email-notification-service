@@ -19,6 +19,7 @@
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
     "env-var": "^7.5.0",
+    "handlebars": "^4.7.9",
     "release-it": "^17.0.0"
   }
 }
