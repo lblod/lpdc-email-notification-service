@@ -35,14 +35,17 @@ export async function getActiveNotificationPreferences() {
       GRAPH ?orgGraph {
         ?gebruiker a foaf:Person ;
                   foaf:member ?bestuurseenheid ;
-                  foaf:firstName ?gebruikerFirstName;
+                  foaf:firstName ?gebruikerFirstName ;
                   foaf:familyName ?gebruikerFamilyName .
       }
       GRAPH ?userGraph {
         ?notificationPreference a lpdcExt:NotificationPreference ;
                                 dct:creator ?gebruiker ;
                                 schema:email ?emailAddress ;
+                                lpdcExt:notificationsEnabled ?notificationsEnabled ;
                                 lpdcExt:hasNotificationRuleConfig ?ruleConfig .
+
+        FILTER(?notificationsEnabled = true)
 
         ?ruleConfig lpdcExt:notificationFrequency ?frequency ;
                     lpdcExt:hasEnabledRule ?rule .
@@ -64,7 +67,7 @@ export async function getActiveNotificationPreferences() {
   const queryResult = await query(queryString);
   const bindings = queryResult.results?.bindings || [];
 
-  // Group by subscription URI, as there can be multiple instanceUris per subscription
+  // Group by notification preferences URI, as there can be multiple instanceUris per notification preference
   const map = new Map();
   for (const binding of bindings) {
     const uri = binding.notificationPreference.value;
@@ -102,7 +105,7 @@ export async function getActiveNotificationPreferences() {
   }
 
   console.log(
-    "Finished grouping the subscriptions by URI, result:",
+    "Finished grouping the notification preferences by URI, result:",
     Array.from(map.values()),
   );
   return Array.from(map.values());
@@ -111,7 +114,7 @@ export async function getActiveNotificationPreferences() {
 export async function getFeedbackChanges(instanceUris, since, orgUuid) {
   if (!instanceUris || instanceUris.length === 0) return [];
 
-  const escapedUris = instanceUris.map((uri) => sparqlEscapeUri(uri)).join(" ");
+  const escapedUris = instanceUris.map((uri) => sparqlEscapeUri(uri)).join("\n");
   const queryString = `
     ${PREFIXES}
     SELECT DISTINCT ?instanceUri ?title ?feedbackModifiedDate ?creator ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName ?feedbackText ?feedbackOrganizationLabel ?feedbackDate WHERE {
@@ -201,7 +204,7 @@ export async function getFeedbackChanges(instanceUris, since, orgUuid) {
 export async function getFormalInformalChanges(instanceUris, since, orgUuid) {
   if (!instanceUris || instanceUris.length === 0) return [];
 
-  const escapedUris = instanceUris.map((uri) => sparqlEscapeUri(uri)).join(" ");
+  const escapedUris = instanceUris.map((uri) => sparqlEscapeUri(uri)).join("\n");
   const queryString = `
     ${PREFIXES}
     SELECT DISTINCT ?instanceUri ?title ?creator ?formalInformalModifiedDate ?dutchLanguageVariant ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName
@@ -270,7 +273,7 @@ export async function getFormalInformalChanges(instanceUris, since, orgUuid) {
 export async function getReviewStatusChanges(instanceUris, since, orgUuid) {
   if (!instanceUris || instanceUris.length === 0) return [];
 
-  const escapedUris = instanceUris.map((uri) => sparqlEscapeUri(uri)).join(" ");
+  const escapedUris = instanceUris.map((uri) => sparqlEscapeUri(uri)).join("\n");
   const queryString = `
     ${PREFIXES}
     SELECT DISTINCT ?instanceUri ?title ?creator ?status ?productID ?dutchLanguageVariant ?reviewStatusModifiedDate ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName ?versionedSource ?hasLatestFunctionalChange
@@ -361,23 +364,23 @@ export async function getReviewStatusChanges(instanceUris, since, orgUuid) {
   });
 }
 
-export async function updateLastNotifiedAt(subscriptionUri, date) {
+export async function updateLastNotifiedAt(notificationpreferencesUri, date) {
   const queryString = `
     ${PREFIXES}
     DELETE {
       GRAPH ?g {
-        ${sparqlEscapeUri(subscriptionUri)} lpdcExt:lastNotifiedAt ?oldTime .
+        ${sparqlEscapeUri(notificationpreferencesUri)} lpdcExt:lastNotifiedAt ?oldTime .
       }
     }
     INSERT {
       GRAPH ?g {
-        ${sparqlEscapeUri(subscriptionUri)} lpdcExt:lastNotifiedAt ${sparqlEscapeDateTime(date)} .
+        ${sparqlEscapeUri(notificationpreferencesUri)} lpdcExt:lastNotifiedAt ${sparqlEscapeDateTime(date)} .
       }
     }
     WHERE {
       GRAPH ?g {
-        ${sparqlEscapeUri(subscriptionUri)} a lpdcExt:NotificationPreference .
-        OPTIONAL { ${sparqlEscapeUri(subscriptionUri)} lpdcExt:lastNotifiedAt ?oldTime . }
+        ${sparqlEscapeUri(notificationpreferencesUri)} a lpdcExt:NotificationPreference .
+        OPTIONAL { ${sparqlEscapeUri(notificationpreferencesUri)} lpdcExt:lastNotifiedAt ?oldTime . }
       }
       FILTER STRSTARTS(STR(?g), "http://mu.semte.ch/graphs/organizations/")
       FILTER STRENDS(STR(?g), "/LoketLB-LPDCGebruiker")
@@ -388,10 +391,10 @@ export async function updateLastNotifiedAt(subscriptionUri, date) {
 
 /**
  * Puts email in the right mail folder graph for sending
- * @param {object} subscription
+ * @param {object} notificationpreferences
  * @param {Object} email
  */
-export async function insertEmail(subscription, email) {
+export async function insertEmail(notificationpreferences, email) {
   try {
     // Temporary debug log
     const now = new Date();
@@ -408,7 +411,7 @@ export async function insertEmail(subscription, email) {
                                       nmo:emailTo ${sparqlEscapeString(email.to)} ;
                                       nmo:messageFrom ${sparqlEscapeString(FROM_EMAIL_ADDRESS)} ;
                                       dct:creator ${sparqlEscapeUri(SERVICE_URI)} ;
-                                      dct:references ${sparqlEscapeUri(subscription.uri)} ;
+                                      dct:references ${sparqlEscapeUri(notificationpreferences.uri)} ;
                                       dct:created ${sparqlEscapeDateTime(now)} .
       }
     }`;

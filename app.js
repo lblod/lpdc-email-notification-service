@@ -5,11 +5,18 @@ import { processNotifications } from "./lib/tasks";
 import { CRON_FREQUENCY } from "./env";
 
 // Daily cron to process the notifications for both frequencies, in case of downtime/missed runs the maximum delay would be a day instead of a week/month
-new CronJob(CRON_FREQUENCY, async () => {
-  await Promise.all([
-    processNotifications(),
-  ]);
-});
+new CronJob(
+  CRON_FREQUENCY,
+  async () => {
+    try {
+      await processNotifications();
+    } catch (error) {
+      console.error("Failed to process notifications", error);
+    }
+  },
+  null,
+  true,
+);
 
 app.use(
   bodyParser.json({
