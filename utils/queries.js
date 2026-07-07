@@ -34,7 +34,7 @@ export async function getActiveNotificationPreferences() {
       GRAPH ?orgGraph {
         ?gebruiker a foaf:Person ;
                   foaf:member ?bestuurseenheid ;
-                  foaf:firstName ?gebruikerFirstName;
+                  foaf:firstName ?gebruikerFirstName ;
                   foaf:familyName ?gebruikerFamilyName .
       }
       OPTIONAL {
@@ -54,7 +54,10 @@ export async function getActiveNotificationPreferences() {
         ?notificationPreference a lpdcExt:NotificationPreference ;
                                 dct:creator ?gebruiker ;
                                 schema:email ?emailAddress ;
+                                lpdcExt:notificationsEnabled ?notificationsEnabled ;
                                 lpdcExt:hasNotificationRuleConfig ?ruleConfig .
+
+        FILTER(?notificationsEnabled = true)
 
         ?ruleConfig lpdcExt:hasEnabledRule ?rule .
         
@@ -118,7 +121,7 @@ export async function getActiveNotificationPreferences() {
   }
 
   console.log(
-    "Finished grouping the notificationPreferences by URI, result:",
+    "Finished grouping the notification preferences by URI, result:",
     Array.from(map.values()),
   );
   return Array.from(map.values());
@@ -127,7 +130,7 @@ export async function getActiveNotificationPreferences() {
 export async function getFeedbackChanges(instanceUris, since, orgUuid) {
   if (!instanceUris || instanceUris.length === 0) return [];
 
-  const escapedUris = instanceUris.map((uri) => sparqlEscapeUri(uri)).join(" ");
+  const escapedUris = instanceUris.map((uri) => sparqlEscapeUri(uri)).join("\n");
   const queryString = `
     ${PREFIXES}
     SELECT DISTINCT ?instanceUri ?title ?feedbackModifiedDate ?creator ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName ?feedbackText ?feedbackOrganizationLabel ?feedbackDate WHERE {
@@ -217,7 +220,7 @@ export async function getFeedbackChanges(instanceUris, since, orgUuid) {
 export async function getFormalInformalChanges(instanceUris, since, orgUuid) {
   if (!instanceUris || instanceUris.length === 0) return [];
 
-  const escapedUris = instanceUris.map((uri) => sparqlEscapeUri(uri)).join(" ");
+  const escapedUris = instanceUris.map((uri) => sparqlEscapeUri(uri)).join("\n");
   const queryString = `
     ${PREFIXES}
     SELECT DISTINCT ?instanceUri ?title ?creator ?formalInformalModifiedDate ?dutchLanguageVariant ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName
@@ -381,7 +384,7 @@ export async function getStatusReportData(orgUuid) {
 export async function getReviewStatusChanges(instanceUris, since, orgUuid) {
   if (!instanceUris || instanceUris.length === 0) return [];
 
-  const escapedUris = instanceUris.map((uri) => sparqlEscapeUri(uri)).join(" ");
+  const escapedUris = instanceUris.map((uri) => sparqlEscapeUri(uri)).join("\n");
   const queryString = `
     ${PREFIXES}
     SELECT DISTINCT ?instanceUri ?title ?creator ?status ?productID ?dutchLanguageVariant ?reviewStatusModifiedDate ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName ?versionedSource ?hasLatestFunctionalChange

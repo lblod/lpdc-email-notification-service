@@ -1,6 +1,7 @@
 import { formatInTimeZone } from "date-fns-tz";
 import { sparqlEscapeUri } from "mu";
 import { FREQUENCIES } from "./constants.js";
+import { convert } from "html-to-text";
 
 export function getUUIDFromUri(uri) {
   const segmentedUri = uri.split("/");
@@ -29,23 +30,15 @@ export function orgGraph(orgUuid) {
 }
 
 export function stripHtmlAndTruncate(htmlString, maxLength = 100) {
-  let cleanText = htmlString
-    .replace(/<\/p>|<\/div>|<br\s*\/?>/gi, " ")
-    .replace(/<\/?[^>]+(>|$)/g, "")
-    .replace(/&quot;/g, '"')
-    .replace(/&apos;|&#39;/g, "'")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/\s+/g, " ")
-    .trim();
+  const text = convert(htmlString ?? "", {
+    wordwrap: false,
+  }).trim();
 
-  if (cleanText.length > maxLength) {
-    return cleanText.substring(0, maxLength).trim() + "...";
+  if (text.length > maxLength) {
+    return `${text.substring(0, maxLength).trim()}...`;
   }
 
-  return cleanText;
+  return text;
 }
 
 export function buildIpdcCompareUrl(ipdcUrl, productID, dutchLanguageVariant, versionedSource, hasLatestFunctionalChange) {
