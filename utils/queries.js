@@ -364,23 +364,23 @@ export async function getReviewStatusChanges(instanceUris, since, orgUuid) {
   });
 }
 
-export async function updateLastNotifiedAt(notificationPreferencesUri, date) {
+export async function updateLastNotifiedAt(notificationPreferenceUri, date) {
   const queryString = `
     ${PREFIXES}
     DELETE {
       GRAPH ?g {
-        ${sparqlEscapeUri(notificationPreferencesUri)} lpdcExt:lastNotifiedAt ?oldTime .
+        ${sparqlEscapeUri(notificationPreferenceUri)} lpdcExt:lastNotifiedAt ?oldTime .
       }
     }
     INSERT {
       GRAPH ?g {
-        ${sparqlEscapeUri(notificationPreferencesUri)} lpdcExt:lastNotifiedAt ${sparqlEscapeDateTime(date)} .
+        ${sparqlEscapeUri(notificationPreferenceUri)} lpdcExt:lastNotifiedAt ${sparqlEscapeDateTime(date)} .
       }
     }
     WHERE {
       GRAPH ?g {
-        ${sparqlEscapeUri(notificationPreferencesUri)} a lpdcExt:NotificationPreference .
-        OPTIONAL { ${sparqlEscapeUri(notificationPreferencesUri)} lpdcExt:lastNotifiedAt ?oldTime . }
+        ${sparqlEscapeUri(notificationPreferenceUri)} a lpdcExt:NotificationPreference .
+        OPTIONAL { ${sparqlEscapeUri(notificationPreferenceUri)} lpdcExt:lastNotifiedAt ?oldTime . }
       }
       FILTER STRSTARTS(STR(?g), "http://mu.semte.ch/graphs/organizations/")
       FILTER STRENDS(STR(?g), "/LoketLB-LPDCGebruiker")
@@ -391,10 +391,10 @@ export async function updateLastNotifiedAt(notificationPreferencesUri, date) {
 
 /**
  * Puts email in the right mail folder graph for sending
- * @param {object} notificationPreferences
+ * @param {object} notificationPreference
  * @param {Object} email
  */
-export async function insertEmail(notificationPreferences, email) {
+export async function insertEmail(notificationPreference, email) {
   try {
     // Temporary debug log
     const now = new Date();
@@ -411,7 +411,7 @@ export async function insertEmail(notificationPreferences, email) {
                                       nmo:emailTo ${sparqlEscapeString(email.to)} ;
                                       nmo:messageFrom ${sparqlEscapeString(FROM_EMAIL_ADDRESS)} ;
                                       dct:creator ${sparqlEscapeUri(SERVICE_URI)} ;
-                                      dct:references ${sparqlEscapeUri(notificationPreferences.uri)} ;
+                                      dct:references ${sparqlEscapeUri(notificationPreference.uri)} ;
                                       dct:created ${sparqlEscapeDateTime(now)} .
       }
     }`;
