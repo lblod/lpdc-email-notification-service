@@ -57,7 +57,8 @@ export function buildIpdcCompareUrl(ipdcUrl, productID, dutchLanguageVariant, ve
   return `${ipdcUrl}/${languageVersion}/concept/${productID}/revisie/vergelijk?revisie1=${publicServiceSnapshot}&revisie2=${latestSnapshot}`;
 }
 
-export function isStatusReportDue() {
+export function isStatusReportDue(forceTrue = false) { //TODO: Added a forcetrue for testing, must delete later
+  if (forceTrue) return true;
   const now = new Date();
   const month = now.getMonth(); 
   const day = now.getDate();

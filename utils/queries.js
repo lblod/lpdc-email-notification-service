@@ -79,7 +79,7 @@ export async function getActiveNotificationPreferences() {
   const queryResult = await query(queryString);
   const bindings = queryResult.results?.bindings || [];
 
-  // Group by subscription URI, as there can be multiple instanceUris per subscription
+  // Group by notificationPreference URI, as there can be multiple instanceUris per notificationPreference
   const map = new Map();
   for (const binding of bindings) {
     const uri = binding.notificationPreference.value;
@@ -118,7 +118,7 @@ export async function getActiveNotificationPreferences() {
   }
 
   console.log(
-    "Finished grouping the subscriptions by URI, result:",
+    "Finished grouping the notificationPreferences by URI, result:",
     Array.from(map.values()),
   );
   return Array.from(map.values());
@@ -472,23 +472,23 @@ export async function getReviewStatusChanges(instanceUris, since, orgUuid) {
   });
 }
 
-export async function updateLastNotifiedAt(subscriptionUri, date) {
+export async function updateLastNotifiedAt(notificationPreferenceUri, date) {
   const queryString = `
     ${PREFIXES}
     DELETE {
       GRAPH ?g {
-        ${sparqlEscapeUri(subscriptionUri)} lpdcExt:lastNotifiedAt ?oldTime .
+        ${sparqlEscapeUri(notificationPreferenceUri)} lpdcExt:lastNotifiedAt ?oldTime .
       }
     }
     INSERT {
       GRAPH ?g {
-        ${sparqlEscapeUri(subscriptionUri)} lpdcExt:lastNotifiedAt ${sparqlEscapeDateTime(date)} .
+        ${sparqlEscapeUri(notificationPreferenceUri)} lpdcExt:lastNotifiedAt ${sparqlEscapeDateTime(date)} .
       }
     }
     WHERE {
       GRAPH ?g {
-        ${sparqlEscapeUri(subscriptionUri)} a lpdcExt:NotificationPreference .
-        OPTIONAL { ${sparqlEscapeUri(subscriptionUri)} lpdcExt:lastNotifiedAt ?oldTime . }
+        ${sparqlEscapeUri(notificationPreferenceUri)} a lpdcExt:NotificationPreference .
+        OPTIONAL { ${sparqlEscapeUri(notificationPreferenceUri)} lpdcExt:lastNotifiedAt ?oldTime . }
       }
       FILTER STRSTARTS(STR(?g), "http://mu.semte.ch/graphs/organizations/")
       FILTER STRENDS(STR(?g), "/LoketLB-LPDCGebruiker")
@@ -499,10 +499,10 @@ export async function updateLastNotifiedAt(subscriptionUri, date) {
 
 /**
  * Puts email in the right mail folder graph for sending
- * @param {object} subscription
+ * @param {object} notificationPreference
  * @param {Object} email
  */
-export async function insertEmail(subscription, email) {
+export async function insertEmail(notificationPreference, email) {
   try {
     // Temporary debug log
     const now = new Date();
@@ -519,7 +519,7 @@ export async function insertEmail(subscription, email) {
                                       nmo:emailTo ${sparqlEscapeString(email.to)} ;
                                       nmo:messageFrom ${sparqlEscapeString(FROM_EMAIL_ADDRESS)} ;
                                       dct:creator ${sparqlEscapeUri(SERVICE_URI)} ;
-                                      dct:references ${sparqlEscapeUri(subscription.uri)} ;
+                                      dct:references ${sparqlEscapeUri(notificationPreference.uri)} ;
                                       dct:created ${sparqlEscapeDateTime(now)} .
       }
     }`;
