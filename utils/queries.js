@@ -290,75 +290,86 @@ export async function getFormalInformalChanges(instanceUris, since, orgUuid) {
 export async function getStatusReportData(orgUuid) {
   const statusQuery = `
     ${PREFIXES}
-    SELECT
-      (COUNT(DISTINCT ?instance) AS ?totalInstances)
-      (COUNT(DISTINCT ?herzieningInstance) AS ?totalHerziening)
-      (COUNT(DISTINCT ?feedbackInstance) AS ?totalFeedback)
-      (COUNT(DISTINCT ?formalInformalInstance) AS ?totalFormalInformal)
-      (COUNT(DISTINCT ?duplicateProductId) AS ?totalDuplicateProductIds)
-    WHERE {
-      GRAPH ${userGraph(orgUuid)} {
-        ?instance a lpdcExt:InstancePublicService .
-
-        OPTIONAL {
-          ?herzieningInstance a lpdcExt:InstancePublicService ;
-                              ext:reviewStatus ?reviewStatus .
-          FILTER(?reviewStatus IN (
-            <http://lblod.data.gift/concepts/review-status/concept-gewijzigd>,
-            <http://lblod.data.gift/concepts/review-status/concept-gearchiveerd>
-          ))
-        }
-
-        OPTIONAL {
-          ?feedbackInstance a lpdcExt:InstancePublicService ;
-                            lpdcExt:feedbackAvailable true .
-        }
-
-        OPTIONAL {
-          ?formalInformalInstance a lpdcExt:InstancePublicService ;
-                                  lpdcExt:needsConversionFromFormalToInformal true .
-        }
-
-        OPTIONAL {
-          {
-            SELECT ?duplicateProductId
-            WHERE {
-              ?instance a lpdcExt:InstancePublicService ;
-                        schema:productID ?duplicateProductId .
+    SELECT ?totalInstances ?totalHerziening ?totalFeedback ?totalFormalInformal ?totalDuplicateProductIds
+      WHERE {
+        # 1. Total Instances
+        {
+          SELECT (COUNT(DISTINCT ?instance) AS ?totalInstances) WHERE {
+            GRAPH ${userGraph(orgUuid)} {
+              ?instance a lpdcExt:InstancePublicService .
             }
-            GROUP BY ?duplicateProductId
-            HAVING (COUNT(DISTINCT ?instance) > 1)
+          }
+        }
+
+        # 2. Total Herziening
+        {
+          SELECT (COUNT(DISTINCT ?herzieningInstance) AS ?totalHerziening) WHERE {
+            GRAPH ${userGraph(orgUuid)} {
+              ?herzieningInstance a lpdcExt:InstancePublicService ;
+                                  ext:reviewStatus ?reviewStatus .
+              FILTER(?reviewStatus IN (
+                <http://lblod.data.gift/concepts/review-status/concept-gewijzigd>,
+                <http://lblod.data.gift/concepts/review-status/concept-gearchiveerd>
+              ))
+            }
+          }
+        }
+
+        # 3. Total Feedback
+        {
+          SELECT (COUNT(DISTINCT ?feedbackInstance) AS ?totalFeedback) WHERE {
+            GRAPH ${userGraph(orgUuid)} {
+              ?feedbackInstance a lpdcExt:InstancePublicService ;
+                                lpdcExt:feedbackAvailable true .
+            }
+          }
+        }
+
+        # 4. Total formal/informal conversions needed
+        {
+          SELECT (COUNT(DISTINCT ?formalInformalInstance) AS ?totalFormalInformal) WHERE {
+            GRAPH ${userGraph(orgUuid)} {
+              ?formalInformalInstance a lpdcExt:InstancePublicService ;
+                                      lpdcExt:needsConversionFromFormalToInformal true .
+            }
+          }
+        }
+
+        # 5. Total Unique Duplicate Product IDs
+        {
+          SELECT (COUNT(DISTINCT ?duplicateProductId) AS ?totalDuplicateProductIds) WHERE {
+            GRAPH ${userGraph(orgUuid)} {
+              ?inst a lpdcExt:InstancePublicService ;
+                    schema:productID ?duplicateProductId .
+
+              ?sibling a lpdcExt:InstancePublicService ;
+                      schema:productID ?duplicateProductId .
+
+              FILTER(?inst != ?sibling)
+            }
           }
         }
       }
-    }
   `;
 
   const duplicateTitlesQuery = `
     ${PREFIXES}
-
     SELECT DISTINCT (STR(?title) AS ?title)
-    WHERE {
-      {
-        SELECT ?duplicateProductId
-        WHERE {
-          GRAPH ${userGraph(orgUuid)} {
-            ?instance a lpdcExt:InstancePublicService ;
-                      schema:productID ?duplicateProductId .
-          }
+      WHERE {
+        GRAPH ${userGraph(orgUuid)} {
+          ?instance a lpdcExt:InstancePublicService ;
+                    schema:productID ?productId ;
+                    dct:source ?source .
+
+          ?duplicateInstance a lpdcExt:InstancePublicService ;
+                            schema:productID ?productId .
+
+          FILTER (?instance < ?duplicateInstance)
         }
-        GROUP BY ?duplicateProductId
-        HAVING (COUNT(DISTINCT ?instance) > 1)
-      }
 
-      GRAPH ${userGraph(orgUuid)} {
-        ?instance schema:productID ?duplicateProductId ;
-                  dct:source ?source .
+        ?source dct:title ?title .
       }
-
-      ?source dct:title ?title .
-    }
-    ORDER BY ?title
+      ORDER BY ?title
   `;
 
   const [statusResult, duplicateTitlesResult] = await Promise.all([
