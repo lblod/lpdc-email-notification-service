@@ -45,6 +45,8 @@ export const FEEDBACK_STATUS = {
 export const SERVICE_URI =
   "http://lblod.data.gift/services/lpdc-email-notification-service";
 
+export const MAX_INSTANCES_PER_EMAIL_SECTION = 7; //Decided together with the business
+
 export const FREQUENCIES = {
   WEEKLY: "weekly",
   MONTHLY: "monthly",

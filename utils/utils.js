@@ -1,6 +1,6 @@
 import { formatInTimeZone } from "date-fns-tz";
 import { sparqlEscapeUri } from "mu";
-import { FREQUENCIES } from "./constants.js";
+import { FREQUENCIES, MAX_INSTANCES_PER_EMAIL_SECTION } from "./constants.js";
 import { convert } from "html-to-text";
 
 export function getUUIDFromUri(uri) {
@@ -32,7 +32,9 @@ export function orgGraph(orgUuid) {
 export function stripHtmlAndTruncate(htmlString, maxLength = 100) {
   const text = convert(htmlString ?? "", {
     wordwrap: false,
-  }).trim();
+  })
+    .replace(/\s+/g, " ")
+    .trim();
 
   if (text.length > maxLength) {
     return `${text.substring(0, maxLength).trim()}...`;
@@ -48,6 +50,12 @@ export function buildIpdcCompareUrl(ipdcUrl, productID, dutchLanguageVariant, ve
   const publicServiceSnapshot = getUUIDFromUri(versionedSource);
   const latestSnapshot = getUUIDFromUri(hasLatestFunctionalChange);
   return `${ipdcUrl}/${languageVersion}/concept/${productID}/revisie/vergelijk?revisie1=${publicServiceSnapshot}&revisie2=${latestSnapshot}`;
+}
+
+export function sortAndLimitInstances(instances, dateField) {
+  return [...instances]
+    .sort((a, b) => new Date(b[dateField]) - new Date(a[dateField]))
+    .slice(0, MAX_INSTANCES_PER_EMAIL_SECTION);
 }
 
 export function isStatusReportDue() {
