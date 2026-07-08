@@ -49,7 +49,7 @@ export async function getActiveNotificationPreferences() {
           CONCAT(?classificationLabel, " ", ?bestuurseenheidLabel)
           AS ?bestuurseenheidDisplayLabel
         )
-      }           
+      }
       GRAPH ?userGraph {
         ?notificationPreference a lpdcExt:NotificationPreference ;
                                 dct:creator ?gebruiker ;
@@ -59,11 +59,8 @@ export async function getActiveNotificationPreferences() {
 
         FILTER(?notificationsEnabled = true)
 
-        ?ruleConfig lpdcExt:hasEnabledRule ?rule .
-        
-        OPTIONAL {
-          ?ruleConfig lpdcExt:notificationFrequency ?frequency .
-        }
+        ?ruleConfig lpdcExt:notificationFrequency ?frequency ;
+                    lpdcExt:hasEnabledRule ?rule .
 
         OPTIONAL {
           ?notificationPreference lpdcExt:notificationInstance ?instanceUri .
@@ -82,18 +79,22 @@ export async function getActiveNotificationPreferences() {
   const queryResult = await query(queryString);
   const bindings = queryResult.results?.bindings || [];
 
-  // Group by notificationPreference URI, as there can be multiple instanceUris per notificationPreference
+  // Group by (notificationPreference URI, frequency) as a single preference
+  // can have rules with different frequencies (e.g. weekly digest + bi-annual status report)
   const map = new Map();
   for (const binding of bindings) {
     const uri = binding.notificationPreference.value;
-    if (!map.has(uri)) {
+    const frequency = binding.frequency.value;
+    const key = `${uri}::${frequency}`;
+
+    if (!map.has(key)) {
       const gebruikerFirstName = binding.gebruikerFirstName?.value || "";
       const gebruikerFamilyName = binding.gebruikerFamilyName?.value || "";
       const gebruikerFullName = `${gebruikerFirstName} ${gebruikerFamilyName}`.trim();
-      map.set(uri, {
+      map.set(key, {
         uri,
         emailAddress: binding.emailAddress.value,
-        frequency: binding.frequency.value,
+        frequency,
         enabledRules: [],
         lastNotifiedAt: binding.lastNotifiedAt?.value
           ? new Date(binding.lastNotifiedAt.value)
@@ -106,14 +107,14 @@ export async function getActiveNotificationPreferences() {
     }
 
     if (binding.rule?.value) {
-      const rules = map.get(uri).enabledRules;
+      const rules = map.get(key).enabledRules;
       if (!rules.includes(binding.rule.value)) {
         rules.push(binding.rule.value);
       }
     }
 
     if (binding.instanceUri?.value) {
-      const instanceUris = map.get(uri).instanceUris;
+      const instanceUris = map.get(key).instanceUris;
       if (!instanceUris.includes(binding.instanceUri.value)) {
         instanceUris.push(binding.instanceUri.value);
       }
@@ -121,7 +122,7 @@ export async function getActiveNotificationPreferences() {
   }
 
   console.log(
-    "Finished grouping the notification preferences by URI, result:",
+    "Finished grouping the notification preferences by (URI, frequency), result:",
     Array.from(map.values()),
   );
   return Array.from(map.values());

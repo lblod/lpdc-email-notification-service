@@ -52,8 +52,8 @@ export function buildIpdcCompareUrl(ipdcUrl, productID, dutchLanguageVariant, ve
 
 export function isStatusReportDue() {
   const now = new Date();
-  const month = now.getMonth(); 
+  const month = now.getMonth();
   const day = now.getDate();
-  //Jan 1 and Jul 1
+  //Mar 1 and Sep 1
   return (month === 2 && day === 1) || (month === 8 && day === 1);
 }
