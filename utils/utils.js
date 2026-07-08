@@ -57,3 +57,11 @@ export function sortAndLimitInstances(instances, dateField) {
     .sort((a, b) => new Date(b[dateField]) - new Date(a[dateField]))
     .slice(0, MAX_INSTANCES_PER_EMAIL_SECTION);
 }
+
+export function isStatusReportDue() {
+  const now = new Date();
+  const month = now.getMonth();
+  const day = now.getDate();
+  //Mar 1 and Sep 1
+  return (month === 2 && day === 1) || (month === 8 && day === 1);
+}

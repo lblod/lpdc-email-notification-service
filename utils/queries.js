@@ -25,18 +25,30 @@ import {
 } from "./constants";
 import { userGraph, orgGraph, getUUIDFromUri } from "./utils";
 
-// TODO: Gebruikersinfo (bestuurseenheid, wil mail ontvangen en linked notification preference)
 export async function getActiveNotificationPreferences() {
   const queryString = `
    ${PREFIXES}
     SELECT DISTINCT ?notificationPreference ?instanceUri ?emailAddress ?frequency
-          ?lastNotifiedAt ?rule ?bestuurseenheid ?gebruikerFirstName ?gebruikerFamilyName
+          ?lastNotifiedAt ?rule ?bestuurseenheid ?bestuurseenheidDisplayLabel ?gebruikerFirstName ?gebruikerFamilyName
     WHERE {
       GRAPH ?orgGraph {
         ?gebruiker a foaf:Person ;
                   foaf:member ?bestuurseenheid ;
                   foaf:firstName ?gebruikerFirstName ;
                   foaf:familyName ?gebruikerFamilyName .
+      }
+      OPTIONAL {
+        GRAPH ?labelGraph {
+          ?bestuurseenheid skos:prefLabel ?bestuurseenheidLabel ;
+                          org:classification ?classification .
+
+          ?classification skos:prefLabel ?classificationLabel .
+        }
+
+        BIND(
+          CONCAT(?classificationLabel, " ", ?bestuurseenheidLabel)
+          AS ?bestuurseenheidDisplayLabel
+        )
       }
       GRAPH ?userGraph {
         ?notificationPreference a lpdcExt:NotificationPreference ;
@@ -67,37 +79,42 @@ export async function getActiveNotificationPreferences() {
   const queryResult = await query(queryString);
   const bindings = queryResult.results?.bindings || [];
 
-  // Group by notification preferences URI, as there can be multiple instanceUris per notification preference
+  // Group by (notificationPreference URI, frequency) as a single preference
+  // can have rules with different frequencies (e.g. weekly digest + bi-annual status report)
   const map = new Map();
   for (const binding of bindings) {
     const uri = binding.notificationPreference.value;
-    if (!map.has(uri)) {
+    const frequency = binding.frequency.value;
+    const key = `${uri}::${frequency}`;
+
+    if (!map.has(key)) {
       const gebruikerFirstName = binding.gebruikerFirstName?.value || "";
       const gebruikerFamilyName = binding.gebruikerFamilyName?.value || "";
       const gebruikerFullName = `${gebruikerFirstName} ${gebruikerFamilyName}`.trim();
-      map.set(uri, {
+      map.set(key, {
         uri,
         emailAddress: binding.emailAddress.value,
-        frequency: binding.frequency.value,
+        frequency,
         enabledRules: [],
         lastNotifiedAt: binding.lastNotifiedAt?.value
           ? new Date(binding.lastNotifiedAt.value)
           : null,
         orgUuid: getUUIDFromUri(binding.bestuurseenheid.value),
+        bestuurseenheid: binding.bestuurseenheidDisplayLabel.value,
         targetLabel: gebruikerFullName,
         instanceUris: [],
       });
     }
 
     if (binding.rule?.value) {
-      const rules = map.get(uri).enabledRules;
+      const rules = map.get(key).enabledRules;
       if (!rules.includes(binding.rule.value)) {
         rules.push(binding.rule.value);
       }
     }
 
     if (binding.instanceUri?.value) {
-      const instanceUris = map.get(uri).instanceUris;
+      const instanceUris = map.get(key).instanceUris;
       if (!instanceUris.includes(binding.instanceUri.value)) {
         instanceUris.push(binding.instanceUri.value);
       }
@@ -105,7 +122,7 @@ export async function getActiveNotificationPreferences() {
   }
 
   console.log(
-    "Finished grouping the notification preferences by URI, result:",
+    "Finished grouping the notification preferences by (URI, frequency), result:",
     Array.from(map.values()),
   );
   return Array.from(map.values());
@@ -268,6 +285,112 @@ export async function getFormalInformalChanges(instanceUris, since, orgUuid) {
       ),
     };
   });
+}
+
+export async function getStatusReportData(orgUuid) {
+  const statusQuery = `
+    ${PREFIXES}
+    SELECT ?totalInstances ?totalHerziening ?totalFeedback ?totalFormalInformal ?totalDuplicateProductIds
+      WHERE {
+        # 1. Total Instances
+        {
+          SELECT (COUNT(DISTINCT ?instance) AS ?totalInstances) WHERE {
+            GRAPH ${userGraph(orgUuid)} {
+              ?instance a lpdcExt:InstancePublicService .
+            }
+          }
+        }
+
+        # 2. Total Herziening
+        {
+          SELECT (COUNT(DISTINCT ?herzieningInstance) AS ?totalHerziening) WHERE {
+            GRAPH ${userGraph(orgUuid)} {
+              ?herzieningInstance a lpdcExt:InstancePublicService ;
+                                  ext:reviewStatus ?reviewStatus .
+              FILTER(?reviewStatus IN (
+                <http://lblod.data.gift/concepts/review-status/concept-gewijzigd>,
+                <http://lblod.data.gift/concepts/review-status/concept-gearchiveerd>
+              ))
+            }
+          }
+        }
+
+        # 3. Total Feedback
+        {
+          SELECT (COUNT(DISTINCT ?feedbackInstance) AS ?totalFeedback) WHERE {
+            GRAPH ${userGraph(orgUuid)} {
+              ?feedbackInstance a lpdcExt:InstancePublicService ;
+                                lpdcExt:feedbackAvailable true .
+            }
+          }
+        }
+
+        # 4. Total formal/informal conversions needed
+        {
+          SELECT (COUNT(DISTINCT ?formalInformalInstance) AS ?totalFormalInformal) WHERE {
+            GRAPH ${userGraph(orgUuid)} {
+              ?formalInformalInstance a lpdcExt:InstancePublicService ;
+                                      lpdcExt:needsConversionFromFormalToInformal true .
+            }
+          }
+        }
+
+        # 5. Total Unique Duplicate Product IDs
+        {
+          SELECT (COUNT(DISTINCT ?duplicateProductId) AS ?totalDuplicateProductIds) WHERE {
+            GRAPH ${userGraph(orgUuid)} {
+              ?inst a lpdcExt:InstancePublicService ;
+                    schema:productID ?duplicateProductId .
+
+              ?sibling a lpdcExt:InstancePublicService ;
+                      schema:productID ?duplicateProductId .
+
+              FILTER(?inst != ?sibling)
+            }
+          }
+        }
+      }
+  `;
+
+  const duplicateTitlesQuery = `
+    ${PREFIXES}
+    SELECT DISTINCT (STR(?title) AS ?title)
+      WHERE {
+        GRAPH ${userGraph(orgUuid)} {
+          ?instance a lpdcExt:InstancePublicService ;
+                    schema:productID ?productId ;
+                    dct:source ?source .
+
+          ?duplicateInstance a lpdcExt:InstancePublicService ;
+                            schema:productID ?productId .
+
+          FILTER (?instance < ?duplicateInstance)
+        }
+
+        ?source dct:title ?title .
+      }
+      ORDER BY ?title
+  `;
+
+  const [statusResult, duplicateTitlesResult] = await Promise.all([
+    query(statusQuery),
+    query(duplicateTitlesQuery),
+  ]);
+
+  const binding = statusResult.results?.bindings?.[0];
+
+  return {
+    totalInstances: parseInt(binding?.totalInstances?.value ?? "0"),
+    totalHerziening: parseInt(binding?.totalHerziening?.value ?? "0"),
+    totalFeedback: parseInt(binding?.totalFeedback?.value ?? "0"),
+    totalFormalInformal: parseInt(binding?.totalFormalInformal?.value ?? "0"),
+    totalDuplicateProductIds: parseInt(binding?.totalDuplicateProductIds?.value ?? "0"),
+
+    duplicateProductTitles:
+      duplicateTitlesResult.results?.bindings?.map(
+        (binding) => binding.title.value
+      ) ?? [],
+  };
 }
 
 export async function getReviewStatusChanges(instanceUris, since, orgUuid) {
