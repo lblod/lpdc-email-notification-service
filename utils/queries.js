@@ -517,9 +517,8 @@ export async function updateLastNotifiedAt(notificationPreferenceUri, date) {
  * @param {object} notificationPreference
  * @param {Object} email
  */
-export async function insertEmail(notificationPreference, email) {
+export async function insertEmail(notificationPreference, email, task) {
   try {
-    // Temporary debug log
     const now = new Date();
     const emailQuery = `
     ${PREFIXES}
@@ -536,6 +535,9 @@ export async function insertEmail(notificationPreference, email) {
                                       dct:creator ${sparqlEscapeUri(SERVICE_URI)} ;
                                       dct:references ${sparqlEscapeUri(notificationPreference.uri)} ;
                                       dct:created ${sparqlEscapeDateTime(now)} .
+      }
+      GRAPH ${sparqlEscapeUri(JOB_GRAPH)} {
+        ${sparqlEscapeUri(task)} dct:references ${sparqlEscapeUri(email.uri)} .
       }
     }`;
     await update(emailQuery);
