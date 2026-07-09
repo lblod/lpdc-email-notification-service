@@ -67,6 +67,11 @@ export const NOTIFICATION_RULES = {
   STATUS_REPORT: "http://lblod.data.gift/concepts/634522c3-f5bd-4f53-82d3-983b7cbbdb10",
 };
 
+export const TASK_OPERATION = {
+  DIGEST: 'http://lblod.data.gift/id/jobs/concept/TaskOperation/lpdcDigestNotification',
+  STATUS_REPORT: 'http://lblod.data.gift/id/jobs/concept/TaskOperation/lpdcStatusReportNotification',
+};
+
 export const SYSTEM_EMAIL_GRAPH = 'http://mu.semte.ch/graphs/system/email';
 export const JOB_OPERATION = 'http://lblod.data.gift/id/jobs/concept/JobOperation/lpdcEmailNotification';
 export const JOB_TYPE = "http://vocab.deri.ie/cogs#Job";

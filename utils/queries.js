@@ -18,6 +18,7 @@ import {
   JOB_TYPE,
   JOB_GRAPH,
   TASK_TYPE,
+  TASK_OPERATION,
   JOB_URI_PREFIX,
   TASK_URI_PREFIX,
   ERROR_URI_PREFIX,
@@ -67,8 +68,17 @@ export async function getActiveNotificationPreferences() {
         }
 
         OPTIONAL {
-          ?notificationPreference lpdcExt:lastNotifiedAt ?lastNotifiedAt .
+        SELECT ?notificationPreference (MAX(?taskModified) AS ?lastNotifiedAt)
+        WHERE {
+          GRAPH ${sparqlEscapeUri(JOB_GRAPH)} {
+            ?task dct:references ?notificationPreference ;
+                  task:operation ${sparqlEscapeUri(TASK_OPERATION.DIGEST)} ;
+                  adms:status ${sparqlEscapeUri(JOB_STATUS.SUCCESS)} ;
+                  dct:modified ?taskModified .
+          }
         }
+        GROUP BY ?notificationPreference
+      }
       }
       FILTER STRSTARTS(STR(?userGraph), "http://mu.semte.ch/graphs/organizations/")
       FILTER STRENDS(STR(?userGraph), "/LoketLB-LPDCGebruiker")
@@ -487,29 +497,16 @@ export async function getReviewStatusChanges(instanceUris, since, orgUuid) {
   });
 }
 
-export async function updateLastNotifiedAt(notificationPreferenceUri, date) {
-  const queryString = `
+export async function linkTaskToPreference(taskUri, notificationPreferenceUri) {
+  const q = `
     ${PREFIXES}
-    DELETE {
-      GRAPH ?g {
-        ${sparqlEscapeUri(notificationPreferenceUri)} lpdcExt:lastNotifiedAt ?oldTime .
+    INSERT DATA {
+      GRAPH ${sparqlEscapeUri(JOB_GRAPH)} {
+        ${sparqlEscapeUri(taskUri)} dct:references ${sparqlEscapeUri(notificationPreferenceUri)} .
       }
-    }
-    INSERT {
-      GRAPH ?g {
-        ${sparqlEscapeUri(notificationPreferenceUri)} lpdcExt:lastNotifiedAt ${sparqlEscapeDateTime(date)} .
-      }
-    }
-    WHERE {
-      GRAPH ?g {
-        ${sparqlEscapeUri(notificationPreferenceUri)} a lpdcExt:NotificationPreference .
-        OPTIONAL { ${sparqlEscapeUri(notificationPreferenceUri)} lpdcExt:lastNotifiedAt ?oldTime . }
-      }
-      FILTER STRSTARTS(STR(?g), "http://mu.semte.ch/graphs/organizations/")
-      FILTER STRENDS(STR(?g), "/LoketLB-LPDCGebruiker")
     }
   `;
-  await update(queryString);
+  await update(q);
 }
 
 /**
@@ -574,7 +571,7 @@ export async function createJob() {
 /**
  * Creates a new task linked to a job in the store
  */
-export async function createTask(jobUri) {
+export async function createTask(jobUri, operation) {
   const taskUuid = uuid();
   const taskUri = `${TASK_URI_PREFIX}${taskUuid}`;
   const now = new Date().toISOString();
@@ -587,7 +584,7 @@ export async function createTask(jobUri) {
           mu:uuid ${sparqlEscapeString(taskUuid)} ;
           dct:created ${sparqlEscapeDateTime(now)} ;
           dct:modified ${sparqlEscapeDateTime(now)} ;
-          task:operation ${sparqlEscapeUri(JOB_OPERATION)} ;
+          task:operation ${sparqlEscapeUri(operation)} ;
           task:index ${sparqlEscapeString("0")} ;
           dct:isPartOf ${sparqlEscapeUri(jobUri)} ;
           adms:status ${sparqlEscapeUri(JOB_STATUS.SCHEDULED)} .
