@@ -1,6 +1,6 @@
 import { formatInTimeZone } from "date-fns-tz";
 import { sparqlEscapeUri } from "mu";
-import { FREQUENCIES, MAX_INSTANCES_PER_EMAIL_SECTION } from "./constants.js";
+import { FREQUENCIES, MAX_INSTANCES_PER_EMAIL_SECTION } from "./constants";
 import { convert } from "html-to-text";
 
 export function getUUIDFromUri(uri) {
