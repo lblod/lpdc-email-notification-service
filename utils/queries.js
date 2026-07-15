@@ -58,7 +58,7 @@ export async function getActiveNotificationPreferences() {
                                 lpdcExt:notificationsEnabled ?notificationsEnabled ;
                                 lpdcExt:hasNotificationRuleConfig ?ruleConfig .
 
-        FILTER(?notificationsEnabled = true)
+        FILTER(STR(?notificationsEnabled) = "true"|| STR(?notificationsEnabled) = "1")
 
         ?ruleConfig lpdcExt:notificationFrequency ?frequency ;
                     lpdcExt:hasEnabledRule ?rule .
