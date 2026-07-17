@@ -19,7 +19,6 @@ const OUTBOX_FOLDER_URI = env
   .get("OUTBOX_FOLDER_URI")
   .default("http://data.lblod.info/id/mail-folders/2")
   .asString();
-const ENABLE_NOTIFICATIONS = process.env.ENABLE_NOTIFICATIONS !== "false";
 
 export {
   LPDC_URL,
@@ -27,5 +26,4 @@ export {
   CRON_FREQUENCY,
   FROM_EMAIL_ADDRESS,
   OUTBOX_FOLDER_URI,
-  ENABLE_NOTIFICATIONS
 };
