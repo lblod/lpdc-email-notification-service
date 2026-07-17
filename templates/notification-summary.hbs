@@ -17,14 +17,18 @@
   </p>
 
   <p style="margin:0; font-family:sans-serif; letter-spacing:normal; line-height:1.6">
+    {{#if isSingular}}
+    Een instantie in je <a href="{{lpdcUrl}}">LPDC-omgeving</a> vraagt jouw aandacht / een actie:
+    {{else}}
     Een aantal instanties in je <a href="{{lpdcUrl}}">LPDC-omgeving</a> vragen je aandacht / een actie:
+    {{/if}}
   </p>
 
   <ul>
 
     {{#if feedbackInstances.length}}
     <li style="margin-bottom:15px;">
-      <strong>Feedback ({{feedbackInstances.length}})</strong>
+      <strong>{{#if isAdhoc}}Actie (feedback){{else}}Feedback ({{feedbackInstances.length}}){{/if}}</strong>
 
       <ul style="margin-top:5px;">
         {{#each feedbackInstances}}
@@ -41,7 +45,7 @@
 
     {{#if reviewInstances.length}}
     <li style="margin-bottom:15px;">
-      <strong>Herziening ({{reviewInstances.length}})</strong>
+      <strong>{{#if isAdhoc}}Actie (herziening){{else}}Herziening ({{reviewInstances.length}}){{/if}}</strong>
 
       <ul style="margin-top:5px;">
         {{#each reviewInstances}}
@@ -59,7 +63,7 @@
 
     {{#if formalInformalInstances.length}}
     <li style="margin-bottom:15px;">
-      <strong>Omzetting naar de 'je'-vorm ({{formalInformalInstances.length}})</strong>
+      <strong>{{#if isAdhoc}}Actie (omzetting u/je){{else}}Omzetting naar de 'je'-vorm ({{formalInformalInstances.length}}){{/if}}</strong>
 
       <ul style="margin-top:5px;">
         {{#each formalInformalInstances}}

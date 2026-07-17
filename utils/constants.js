@@ -50,6 +50,7 @@ export const MAX_INSTANCES_PER_EMAIL_SECTION = 7; //Decided together with the bu
 export const FREQUENCIES = {
   WEEKLY: "weekly",
   MONTHLY: "monthly",
+  ADHOC: "adhoc",
 };
 
 export const JOB_STATUS = {
@@ -68,6 +69,7 @@ export const NOTIFICATION_RULES = {
 };
 
 export const TASK_OPERATION = {
+  ADHOC: 'http://lblod.data.gift/id/jobs/concept/TaskOperation/lpdcAdhocNotification',
   DIGEST: 'http://lblod.data.gift/id/jobs/concept/TaskOperation/lpdcDigestNotification',
   STATUS_REPORT: 'http://lblod.data.gift/id/jobs/concept/TaskOperation/lpdcStatusReportNotification',
 };
