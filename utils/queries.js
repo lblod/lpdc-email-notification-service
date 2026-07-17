@@ -58,7 +58,7 @@ export async function getActiveNotificationPreferences() {
                                 lpdcExt:notificationsEnabled ?notificationsEnabled ;
                                 lpdcExt:hasNotificationRuleConfig ?ruleConfig .
 
-        FILTER(?notificationsEnabled = true)
+        FILTER(STR(?notificationsEnabled) = "true"|| STR(?notificationsEnabled) = "1")
 
         ?ruleConfig lpdcExt:notificationFrequency ?frequency ;
                     lpdcExt:hasEnabledRule ?rule .
@@ -572,7 +572,7 @@ export async function insertEmail(notificationPreference, email, task) {
     await update(emailQuery);
   } catch (err) {
     console.log("error", err);
-    throw new Error(err);
+    throw err;
   }
 }
 
@@ -655,7 +655,7 @@ export async function updateStatus(uri, status) {
 export async function addError(jobUri, error) {
   const errorUuid = uuid();
   const errorUri = `${ERROR_URI_PREFIX}${errorUuid}`;
-
+  const message = error?.message ?? String(error);
   const q = `
     ${PREFIXES}
     INSERT DATA {
@@ -663,7 +663,7 @@ export async function addError(jobUri, error) {
         ${sparqlEscapeUri(jobUri)} task:error ${sparqlEscapeUri(errorUri)} .
         ${sparqlEscapeUri(errorUri)} a oslc:Error ;
           mu:uuid ${sparqlEscapeString(errorUuid)} ;
-          oslc:message ${sparqlEscapeString(error.message)} .
+          oslc:message ${sparqlEscapeString(message)} .
       }
     }
   `;
