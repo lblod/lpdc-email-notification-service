@@ -1,0 +1,91 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="format-detection" content="telephone=no" />
+  <!--[if !mso]><!-->
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet" />
+  <!--<![endif]-->
+</head>
+
+<body>
+  <p style="{{paragraphStyle}}">
+    Beste {{targetLabel}},
+  </p>
+
+  <p style="{{paragraphStyle}}">
+    Met de <a href="{{lpdcInfoUrl}}">Lokale Producten- en Dienstencatalogus (LPDC)</a> maak je informatie over de dienstverleningen van jouw bestuur beschikbaar voor én via verschillende kanalen. Toepassingen zoals het Verenigingsloket, de Rechtenverkenner, Mijn Burgerprofiel, Your Europe, … zorgen ervoor dat jouw doelgroep snel en eenvoudig de juiste info én de weg naar jouw dienstverlening vindt.
+    <br>
+    Tenminste… àls de informatie in LPDC volledig, correct en up-to-date is.
+  </p>
+
+  <p style="{{paragraphStyle}}">
+    Dit is de huidige status voor jouw bestuur <strong>{{bestuurseenheid}}</strong>:
+  </p>
+
+  <p style="{{paragraphStyle}}">
+    Jouw LPDC-omgeving bevat <strong>{{totalInstances}}</strong> instanties.
+  </p>
+
+  <ul style="padding-left: 20px; margin: 0;">
+    <li style="{{paragraphStyle}}">
+      <strong>Feedback:</strong>
+      <strong>{{totalFeedback}}</strong> instanties hebben feedback gekregen. Bekijk deze <a href="{{feedbackInstancesUrl}}">instanties</a>.
+      <br>
+
+      Soms vindt een hergebruiker een typfout, dode link, of verouderde of ontbrekende informatie in een instantie. Dankzij de feedbackfunctie kunnen ze dit nu rechtstreeks melden.
+      <br>
+      <u>Wat moet je doen?</u>
+      <a href="{{feedbackHandleidingUrl}}">Feedback op een instantie | Handleiding LPDC</a><br>
+    </li>
+
+    <li style="{{paragraphStyle}}">
+      <strong>Herziening:</strong>
+      <strong>{{totalHerziening}}</strong> instanties zijn gekoppeld met een gewijzigd concept. Bekijk deze <a href="{{herzieningInstancesUrl}}">instanties</a>.
+      <br>
+
+      Wanneer een concept wordt gewijzigd, bijvoorbeeld naar aanleiding van een aanpassing in de wetgeving, kan het nodig zijn dat jouw gekoppelde instantie ook een update moet krijgen.
+      <br>
+      <u>Wat moet je doen?</u>
+      <a href="{{herzieningHandleidingUrl}}">Herziening nodig: Wijziging aan een concept verwerken in een instantie | Handleiding LPDC</a><br>
+    </li>
+
+    <li style="{{paragraphStyle}}">
+      <strong>Dubbele instanties:</strong>
+      Van <strong>{{totalDuplicateProductIds}}</strong> instanties bestaan er meerdere versies. Ga naar je <a href="{{lpdcUrl}}">LPDC-omgeving</a>.
+      <br>
+
+      In de LPDC-omgeving van jouw bestuur staan meerdere versies van hetzelfde concept. Enerzijds betekent dit voor jullie dubbel werk, en anderzijds creëert het verwarring: welke versie is de correcte? Kijk na welke versie je wil houden en verwijder de andere versie(s). Zo heb je slechts één bron van waarheid en moet je ook maar één versie up-to-date houden.<br>
+      De concepten met meerdere versies zijn: <i>{{duplicateProductTitles}}</i>
+      <br>
+      <u>Wat moet je doen?</u>
+      <a href="{{verwijderenHandleidingUrl}}">Product of dienst verwijderen | Handleiding LPDC</a><br>
+    </li>
+
+    {{#if hasFormalInformal}}
+      <li style="{{paragraphStyle}}">
+        <strong>U &gt; Je-omzetting:</strong>
+        <strong>{{totalFormalInformal}}</strong> instanties moeten nog worden omgezet naar de je-vorm. Bekijk deze <a href="{{formalInformalInstancesUrl}}">instanties</a>.
+        <br>
+
+        Jouw bestuur heeft gekozen om in de je-vorm te werken. Instanties die aangemaakt zijn voordat deze keuze was gemaakt, hebben de "u"-vorm als basis. Je kan deze instanties eenvoudig omzetten naar de je-vorm.
+        <br>
+        <u>Wat moet je doen?</u>
+        <a href="{{jeVormHandleidingUrl}}">Kies je voor "u" of "je"? | Handleiding LPDC</a><br><br>
+      </li>
+    {{/if}}
+  </ul>
+
+  <p style="{{paragraphStyle}}">
+    Heb je vragen? Neem contact op via
+    <a href="mailto:loketlokaalbestuur@vlaanderen.be">loketlokaalbestuur@vlaanderen.be</a>.
+  </p>
+
+  <p style="{{paragraphStyle}}">
+    Met vriendelijke groeten,
+  </p>
+</body>
+</html>
