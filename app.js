@@ -104,7 +104,7 @@ app.post("/delta-review-status", async (req, res) => {
       "http://mu.semte.ch/vocabularies/ext/reviewStatus",
       "http://lblod.data.gift/concepts/review-status/concept-gearchiveerd",
     );
-    const modified = delta.getInsertsFor(
+    const modified = new Delta(req.body).getInsertsFor(
       "http://mu.semte.ch/vocabularies/ext/reviewStatus",
       "http://lblod.data.gift/concepts/review-status/concept-gewijzigd",
     );
