@@ -30,10 +30,11 @@ export async function getAdhocNotificationPreferencesForInstance(
 ) {
   const queryString = `
    ${PREFIXES}
-    SELECT ?notificationPreference ?emailAddress ?bestuurseenheid ?gebruikerFirstName ?gebruikerFamilyName
+    SELECT DISTINCT ?notificationPreference ?emailAddress ?bestuurseenheid ?gebruikerFirstName ?gebruikerFamilyName
     WHERE {
       GRAPH ?userGraph {
-        ?notificationPreference lpdcExt:notificationInstance ${sparqlEscapeUri(instanceUri)} ;
+        ?notificationPreference a lpdcExt:NotificationPreference ;
+                                lpdcExt:notificationInstance ${sparqlEscapeUri(instanceUri)} ;
                                 lpdcExt:hasNotificationRuleConfig ?ruleConfig ;
                                 lpdcExt:notificationsEnabled ?notificationsEnabled;
                                 dct:creator ?gebruiker ;
