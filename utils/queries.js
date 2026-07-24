@@ -260,7 +260,7 @@ export async function getFeedbackChanges(instanceUris, orgUuid, since = null) {
    `;
 
   const queryResult = await query(queryString);
-  return (queryResult.results?.bindings || []).map((binding) => {
+  const results = (queryResult.results?.bindings || []).map((binding) => {
     const creatorFirstName = binding.creatorFirstName?.value || "";
     const creatorLastName = binding.creatorFamilyName?.value || "";
     const creatorFullName = `${creatorFirstName} ${creatorLastName}`.trim();
@@ -281,6 +281,8 @@ export async function getFeedbackChanges(instanceUris, orgUuid, since = null) {
       feedbackDate: new Date(binding.feedbackDate?.value),
     };
   });
+  const uniqueinstanceUris = new Set();
+  return results.filter(r => !uniqueinstanceUris.has(r.instanceUri) && uniqueinstanceUris.add(r.instanceUri));
 }
 
 export async function getFormalInformalChanges(
@@ -339,7 +341,7 @@ export async function getFormalInformalChanges(
   `;
 
   const queryResult = await query(queryString);
-  return (queryResult.results?.bindings || []).map((binding) => {
+  const results = (queryResult.results?.bindings || []).map((binding) => {
     const creatorFirstName = binding.creatorFirstName?.value || "";
     const creatorLastName = binding.creatorFamilyName?.value || "";
     const creatorFullName = `${creatorFirstName} ${creatorLastName}`.trim();
@@ -359,6 +361,8 @@ export async function getFormalInformalChanges(
       ),
     };
   });
+  const uniqueinstanceUris = new Set();
+  return results.filter(r => !uniqueinstanceUris.has(r.instanceUri) && uniqueinstanceUris.add(r.instanceUri));
 }
 
 export async function getStatusReportData(orgUuid) {
@@ -539,7 +543,7 @@ export async function getReviewStatusChanges(
   `;
 
   const queryResult = await query(queryString);
-  return (queryResult.results?.bindings || []).map((binding) => {
+  const results = (queryResult.results?.bindings || []).map((binding) => {
     const creatorFirstName = binding.creatorFirstName?.value || "";
     const creatorLastName = binding.creatorFamilyName?.value || "";
     const creatorFullName = `${creatorFirstName} ${creatorLastName}`.trim();
@@ -565,6 +569,8 @@ export async function getReviewStatusChanges(
       ),
     };
   });
+  const uniqueinstanceUris = new Set();
+  return results.filter(r => !uniqueinstanceUris.has(r.instanceUri) && uniqueinstanceUris.add(r.instanceUri));
 }
 
 export async function linkTaskToPreference(taskUri, notificationPreferenceUri) {
