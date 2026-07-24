@@ -138,6 +138,44 @@ export async function getActiveNotificationPreferences() {
   return Array.from(map.values());
 }
 
+export async function getAllActiveBestuurseenheden() {
+  const queryString = `
+    ${PREFIXES}
+    SELECT DISTINCT ?bestuurseenheid ?orgUuid ?emailAddress ?bestuurseenheidDisplayLabel
+    WHERE {
+      GRAPH ?orgGraph {
+        ?bestuurseenheid a besluit:Bestuurseenheid ;
+                        mu:uuid ?orgUuid ;
+                        ext:mailAdresVoorNotificaties ?emailAddress .
+      }
+      OPTIONAL {
+        GRAPH ?labelGraph {
+          ?bestuurseenheid skos:prefLabel ?bestuurseenheidLabel ;
+                           org:classification ?classification .
+          ?classification skos:prefLabel ?classificationLabel .
+        }
+        BIND(CONCAT(?classificationLabel, " ", ?bestuurseenheidLabel) AS ?bestuurseenheidDisplayLabel)
+      }
+      FILTER STRSTARTS(STR(?orgGraph), "http://mu.semte.ch/graphs/public")
+      FILTER EXISTS {
+        GRAPH ?userGraph {
+          ?instance a lpdcExt:InstancePublicService .
+        }
+        FILTER(CONCAT("http://mu.semte.ch/graphs/organizations/", ?orgUuid, "/LoketLB-LPDCGebruiker") = STR(?userGraph))
+      }
+    }
+  `;
+  const queryResult = await query(queryString);
+  const bindings = queryResult.results?.bindings || [];
+
+  return bindings.map((binding) => ({
+    uri: binding.bestuurseenheid.value,
+    orgUuid: binding.orgUuid.value,
+    emailAddress: binding.emailAddress.value,
+    bestuurseenheid: binding.bestuurseenheidDisplayLabel?.value || "",
+  }));
+}
+
 export async function getFeedbackChanges(instanceUris, since, orgUuid) {
   if (!instanceUris || instanceUris.length === 0) return [];
 
