@@ -7,7 +7,6 @@ import { CRON_FREQUENCY } from "./env";
 import { getAdhocNotificationPreferencesForInstance } from "./utils/queries";
 import { NOTIFICATION_RULES } from "./utils/constants";
 
-await processNotifications();
 // Daily cron to process the notifications for both frequencies, in case of downtime/missed runs the maximum delay would be a day instead of a week/month
 CronJob.from({
   cronTime: CRON_FREQUENCY,
@@ -49,11 +48,18 @@ app.post("/delta-feedback", async (req, res) => {
           NOTIFICATION_RULES.FEEDBACK,
         );
       for (const preference of notificationPreferences) {
-        await processAdhocNotification(
-          instance,
-          preference,
-          NOTIFICATION_RULES.FEEDBACK,
-        );
+        try {
+          await processAdhocNotification(
+            instance,
+            preference,
+            NOTIFICATION_RULES.FEEDBACK,
+          );
+        } catch (err) {
+          console.error(
+            `Failed to process notification for instance ${instance}, preference ${preference}:`,
+            err,
+          );
+        }
       }
     }
 
@@ -80,11 +86,18 @@ app.post("/delta-formal-informal", async (req, res) => {
           NOTIFICATION_RULES.FORMAL_INFORMAL,
         );
       for (const preference of notificationPreferences) {
-        await processAdhocNotification(
-          instance,
-          preference,
-          NOTIFICATION_RULES.FORMAL_INFORMAL,
-        );
+        try {
+          await processAdhocNotification(
+            instance,
+            preference,
+            NOTIFICATION_RULES.FORMAL_INFORMAL,
+          );
+        } catch (err) {
+          console.error(
+            `Failed to process notification for instance ${instance}, preference ${preference}:`,
+            err,
+          );
+        }
       }
     }
 
@@ -116,11 +129,18 @@ app.post("/delta-review-status", async (req, res) => {
           NOTIFICATION_RULES.HERZIENING,
         );
       for (const preference of notificationPreferences) {
-        await processAdhocNotification(
-          instance,
-          preference,
-          NOTIFICATION_RULES.HERZIENING,
-        );
+        try {
+          await processAdhocNotification(
+            instance,
+            preference,
+            NOTIFICATION_RULES.HERZIENING,
+          );
+        } catch (err) {
+          console.error(
+            `Failed to process notification for instance ${instance}, preference ${preference}:`,
+            err,
+          );
+        }
       }
     }
 
