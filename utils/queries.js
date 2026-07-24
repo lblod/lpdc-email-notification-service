@@ -557,12 +557,6 @@ export async function hasStatusReportBeenSent(orgUri, since) {
   return result.boolean === true;
 }
 
-function getStatusReportRunStart() {
-  const now = new Date();
-  const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-  return startOfDay.toISOString();
-}
-
 /**
  * Puts email in the right mail folder graph for sending
  * @param {object} notificationPreference
