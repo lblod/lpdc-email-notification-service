@@ -138,7 +138,7 @@ export async function getActiveNotificationPreferences() {
   return Array.from(map.values());
 }
 
-export async function getAllBestuurseenheden() { 
+export async function getAllActiveBestuurseenheden() {
   const queryString = `
     ${PREFIXES}
     SELECT DISTINCT ?bestuurseenheid ?orgUuid ?emailAddress ?bestuurseenheidDisplayLabel
@@ -157,6 +157,12 @@ export async function getAllBestuurseenheden() {
         BIND(CONCAT(?classificationLabel, " ", ?bestuurseenheidLabel) AS ?bestuurseenheidDisplayLabel)
       }
       FILTER STRSTARTS(STR(?orgGraph), "http://mu.semte.ch/graphs/public")
+      FILTER EXISTS {
+        GRAPH ?instanceGraph {
+          ?instance a lpdcExt:InstancePublicService .
+        }
+        FILTER(CONCAT("http://mu.semte.ch/graphs/organizations/", ?orgUuid, "/LoketLB-LPDCGebruiker") = STR(?instanceGraph))
+      }
     }
   `;
   const queryResult = await query(queryString);
