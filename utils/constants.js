@@ -53,6 +53,19 @@ export const FREQUENCIES = {
   ADHOC: "adhoc",
 };
 
+export const STATUS_MAP = {
+  "http://lblod.data.gift/concepts/instance-status/ontwerp":
+    "ontwerp",
+  "http://lblod.data.gift/concepts/instance-status/verstuurd":
+    "verstuurd",
+};
+export const CONCEPT_STATUS_MAP = {
+  "http://lblod.data.gift/concepts/review-status/concept-gewijzigd":
+    "gewijzigd",
+  "http://lblod.data.gift/concepts/review-status/concept-gearchiveerd":
+    "gearchiveerd",
+};
+
 export const JOB_STATUS = {
   PREPARING: "http://redpencil.data.gift/id/concept/JobStatus/preparing",
   BUSY: "http://redpencil.data.gift/id/concept/JobStatus/busy",

@@ -7,6 +7,8 @@ import {
 import { querySudo as query, updateSudo as update } from "@lblod/mu-auth-sudo";
 import { OUTBOX_FOLDER_URI, FROM_EMAIL_ADDRESS } from "../env";
 import {
+  STATUS_MAP,
+  CONCEPT_STATUS_MAP,
   PREFIXES,
   FEEDBACK_STATUS,
   SERVICE_URI,
@@ -482,14 +484,15 @@ export async function getReviewStatusChanges(
     : "";
   const queryString = `
     ${PREFIXES}
-    SELECT DISTINCT ?instanceUri ?title ?creator ?status ?productID ?dutchLanguageVariant ?reviewStatusModifiedDate ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName ?versionedSource ?hasLatestFunctionalChange
+    SELECT DISTINCT ?instanceUri ?title ?creator ?status ?conceptStatus ?productID ?dutchLanguageVariant ?reviewStatusModifiedDate ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName ?versionedSource ?hasLatestFunctionalChange
     WHERE {
       GRAPH ${userGraph(orgUuid)} {
         VALUES ?instanceUri { ${escapedUris} }
 
-        ?instanceUri ext:reviewStatus ?status ;
-                    schema:productID ?productID ;
-                    lpdcExt:reviewStatusModifiedDate ?reviewStatusModifiedDate .
+        ?instanceUri adms:status ?status ;
+                     ext:reviewStatus ?conceptStatus ;
+                     schema:productID ?productID ;
+                     lpdcExt:reviewStatusModifiedDate ?reviewStatusModifiedDate .
 
         OPTIONAL { ?instanceUri dct:title ?title . }
         OPTIONAL { ?instanceUri ext:hasVersionedSource ?versionedSource . }
@@ -497,7 +500,7 @@ export async function getReviewStatusChanges(
         OPTIONAL { ?instanceUri dct:source ?source . }
 
         ${sinceFilter}
-        FILTER(?status IN (
+        FILTER(?conceptStatus IN (
           <http://lblod.data.gift/concepts/review-status/concept-gewijzigd>,
           <http://lblod.data.gift/concepts/review-status/concept-gearchiveerd>
         ))
@@ -535,13 +538,6 @@ export async function getReviewStatusChanges(
     }
   `;
 
-  const statusMap = {
-    "http://lblod.data.gift/concepts/review-status/concept-gewijzigd":
-      "gewijzigd",
-    "http://lblod.data.gift/concepts/review-status/concept-gearchiveerd":
-      "gearchiveerd",
-  };
-
   const queryResult = await query(queryString);
   return (queryResult.results?.bindings || []).map((binding) => {
     const creatorFirstName = binding.creatorFirstName?.value || "";
@@ -559,7 +555,8 @@ export async function getReviewStatusChanges(
       creator: creatorFullName || "Onbekend",
       lastModifier: modifierFullName || "Onbekend",
       dutchLanguageVariant: binding.dutchLanguageVariant?.value || "",
-      status: statusMap[binding.status?.value],
+      status: STATUS_MAP[binding.status?.value],
+      conceptStatus: CONCEPT_STATUS_MAP[binding.conceptStatus?.value],
       versionedSource: binding.versionedSource?.value || "Onbekend",
       hasLatestFunctionalChange:
         binding.hasLatestFunctionalChange?.value || "Onbekend",

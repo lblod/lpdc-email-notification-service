@@ -18,9 +18,9 @@
 
   <p style="margin:0; font-family:sans-serif; letter-spacing:normal; line-height:1.6">
     {{#if isSingular}}
-    Een instantie in je <a href="{{lpdcUrl}}">LPDC-omgeving</a> vraagt jouw aandacht / een actie:
+    Een instantie in je <a href="{{lpdcUrl}}">LPDC-omgeving</a> vraagt jouw aandacht:
     {{else}}
-    Een aantal instanties in je <a href="{{lpdcUrl}}">LPDC-omgeving</a> vragen je aandacht / een actie:
+    Een aantal instanties in je <a href="{{lpdcUrl}}">LPDC-omgeving</a> vragen je aandacht:
     {{/if}}
   </p>
 
@@ -28,7 +28,7 @@
 
     {{#if feedbackInstances.length}}
     <li style="margin-bottom:15px;">
-      <strong>{{#if isAdhoc}}Actie (feedback){{else}}Feedback ({{feedbackInstances.length}}){{/if}}</strong>
+      <strong>Feedback{{#unless isAdhoc}} ({{feedbackInstances.length}}){{/unless}}</strong>
 
       <ul style="margin-top:5px;">
         {{#each feedbackInstances}}
@@ -45,7 +45,7 @@
 
     {{#if reviewInstances.length}}
     <li style="margin-bottom:15px;">
-      <strong>{{#if isAdhoc}}Actie (herziening){{else}}Herziening ({{reviewInstances.length}}){{/if}}</strong>
+      <strong>Herziening {{#unless isAdhoc}} ({{reviewInstances.length}}){{/unless}}</strong>
 
       <ul style="margin-top:5px;">
         {{#each reviewInstances}}
@@ -54,6 +54,7 @@
           <span>Aangemaakt door: {{creator}}</span><br />
           <span>Laatst bewerkt door: {{lastModifier}}</span><br />
           <span>Status: {{status}}</span><br />
+          <span>Concept status: {{conceptStatus}}</span><br />
           <a href="{{ipdcCompareUrl}}">IPDC vergelijking</a>
         </li>
         {{/each}}
@@ -63,7 +64,7 @@
 
     {{#if formalInformalInstances.length}}
     <li style="margin-bottom:15px;">
-      <strong>{{#if isAdhoc}}Actie (omzetting u/je){{else}}Omzetting naar de 'je'-vorm ({{formalInformalInstances.length}}){{/if}}</strong>
+      <strong>Omzetting naar de 'je'-vorm{{#unless isAdhoc}} ({{formalInformalInstances.length}}){{/unless}}</strong>
 
       <ul style="margin-top:5px;">
         {{#each formalInformalInstances}}
