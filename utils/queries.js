@@ -158,10 +158,10 @@ export async function getAllActiveBestuurseenheden() {
       }
       FILTER STRSTARTS(STR(?orgGraph), "http://mu.semte.ch/graphs/public")
       FILTER EXISTS {
-        GRAPH ?instanceGraph {
+        GRAPH ?userGraph {
           ?instance a lpdcExt:InstancePublicService .
         }
-        FILTER(CONCAT("http://mu.semte.ch/graphs/organizations/", ?orgUuid, "/LoketLB-LPDCGebruiker") = STR(?instanceGraph))
+        FILTER(CONCAT("http://mu.semte.ch/graphs/organizations/", ?orgUuid, "/LoketLB-LPDCGebruiker") = STR(?userGraph))
       }
     }
   `;
