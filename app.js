@@ -63,10 +63,10 @@ app.post("/delta-feedback", async (req, res) => {
       }
     }
 
-    return res.status(204).send().end();
+    return res.status(204).send();
   } catch (e) {
     console.error("Error in delta-feedback", e);
-    return res.status(500).send();
+    return res.status(500).send({ error: e.message });
   }
 });
 
@@ -101,10 +101,10 @@ app.post("/delta-formal-informal", async (req, res) => {
       }
     }
 
-    return res.status(204).send().end();
+    return res.status(204).send();
   } catch (e) {
     console.error("Error in delta-formal-informal", e);
-    return res.status(500).send();
+    return res.status(500).send({ error: e.message });
   }
 });
 
@@ -144,10 +144,10 @@ app.post("/delta-review-status", async (req, res) => {
       }
     }
 
-    return res.status(204).send().end();
+    return res.status(204).send();
   } catch (e) {
     console.error("Error in delta-review-status", e);
-    return res.status(500).send();
+    return res.status(500).send({ error: e.message });
   }
 });
 
