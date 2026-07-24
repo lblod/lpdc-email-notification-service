@@ -138,7 +138,7 @@ export async function getActiveNotificationPreferences() {
   return Array.from(map.values());
 }
 
-export async function getAllBestuurseenheden() { // Might need some changing after org email mapping
+export async function getAllBestuurseenheden() { 
   const queryString = `
     ${PREFIXES}
     SELECT DISTINCT ?bestuurseenheid ?orgUuid ?emailAddress ?bestuurseenheidDisplayLabel
@@ -539,6 +539,28 @@ export async function linkTaskToPreference(taskUri, notificationPreferenceUri) {
     }
   `;
   await update(q);
+}
+
+export async function hasStatusReportBeenSent(orgUri, since) {
+  const q = `
+    ${PREFIXES}
+    ASK {
+      GRAPH ${sparqlEscapeUri(SYSTEM_EMAIL_GRAPH)} {
+        ?email a nmo:Email ;
+               dct:references ${sparqlEscapeUri(orgUri)} ;
+               dct:created ?created .
+        FILTER(?created >= ${sparqlEscapeDateTime(since)})
+      }
+    }
+  `;
+  const result = await query(q);
+  return result.boolean === true;
+}
+
+function getStatusReportRunStart() {
+  const now = new Date();
+  const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  return startOfDay.toISOString();
 }
 
 /**

@@ -65,3 +65,9 @@ export function isStatusReportDue() {
   //Mar 1 and Sep 1
   return (month === 2 && day === 1) || (month === 8 && day === 1);
 }
+
+export function getStatusReportRunStart() {
+  const now = new Date();
+  const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  return startOfDay.toISOString();
+}
