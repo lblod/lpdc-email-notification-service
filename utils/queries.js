@@ -5,11 +5,10 @@ import {
   uuid,
 } from "mu";
 import { querySudo as query, updateSudo as update } from "@lblod/mu-auth-sudo";
+import { OUTBOX_FOLDER_URI, FROM_EMAIL_ADDRESS } from "../env";
 import {
-  OUTBOX_FOLDER_URI,
-  FROM_EMAIL_ADDRESS,
-} from "../env";
-import {
+  STATUS_MAP,
+  CONCEPT_STATUS_MAP,
   PREFIXES,
   FEEDBACK_STATUS,
   SERVICE_URI,
@@ -23,8 +22,58 @@ import {
   TASK_URI_PREFIX,
   ERROR_URI_PREFIX,
   SYSTEM_EMAIL_GRAPH,
+  FREQUENCIES,
 } from "./constants";
 import { userGraph, orgGraph, getUUIDFromUri } from "./utils";
+
+export async function getAdhocNotificationPreferencesForInstance(
+  instanceUri,
+  notificationAction,
+) {
+  const queryString = `
+   ${PREFIXES}
+    SELECT DISTINCT ?notificationPreference ?emailAddress ?bestuurseenheid ?gebruikerFirstName ?gebruikerFamilyName
+    WHERE {
+      GRAPH ?userGraph {
+        ?notificationPreference a lpdcExt:NotificationPreference ;
+                                lpdcExt:notificationInstance ${sparqlEscapeUri(instanceUri)} ;
+                                lpdcExt:hasNotificationRuleConfig ?ruleConfig ;
+                                lpdcExt:notificationsEnabled ?notificationsEnabled;
+                                dct:creator ?gebruiker ;
+                                schema:email ?emailAddress .
+
+        ?ruleConfig lpdcExt:hasEnabledRule ${sparqlEscapeUri(notificationAction)} ;
+                    lpdcExt:notificationFrequency ${sparqlEscapeString(FREQUENCIES.ADHOC)} .
+
+        FILTER(STR(?notificationsEnabled) = "true"|| STR(?notificationsEnabled) = "1")
+      }
+      GRAPH ?orgGraph {
+        ?gebruiker a foaf:Person ;
+                  foaf:member ?bestuurseenheid ;
+                  foaf:firstName ?gebruikerFirstName ;
+                  foaf:familyName ?gebruikerFamilyName .
+      }
+      FILTER STRSTARTS(STR(?userGraph), "http://mu.semte.ch/graphs/organizations/")
+      FILTER STRENDS(STR(?userGraph), "/LoketLB-LPDCGebruiker")
+      FILTER STRSTARTS(STR(?orgGraph), "http://mu.semte.ch/graphs/organizations/")
+    }
+   `;
+
+  const queryResult = await query(queryString);
+  return (queryResult.results?.bindings || []).map((binding) => {
+    const gebruikerFirstName = binding.gebruikerFirstName?.value || "";
+    const gebruikerFamilyName = binding.gebruikerFamilyName?.value || "";
+    const gebruikerFullName =
+      `${gebruikerFirstName} ${gebruikerFamilyName}`.trim();
+
+    return {
+      uri: binding.notificationPreference.value,
+      emailAddress: binding.emailAddress.value,
+      targetLabel: gebruikerFullName,
+      orgUuid: getUUIDFromUri(binding.bestuurseenheid.value),
+    };
+  });
+}
 
 export async function getActiveNotificationPreferences() {
   const queryString = `
@@ -100,7 +149,8 @@ export async function getActiveNotificationPreferences() {
     if (!map.has(key)) {
       const gebruikerFirstName = binding.gebruikerFirstName?.value || "";
       const gebruikerFamilyName = binding.gebruikerFamilyName?.value || "";
-      const gebruikerFullName = `${gebruikerFirstName} ${gebruikerFamilyName}`.trim();
+      const gebruikerFullName =
+        `${gebruikerFirstName} ${gebruikerFamilyName}`.trim();
       map.set(key, {
         uri,
         emailAddress: binding.emailAddress.value,
@@ -176,17 +226,22 @@ export async function getAllActiveBestuurseenheden() {
   }));
 }
 
-export async function getFeedbackChanges(instanceUris, since, orgUuid) {
+export async function getFeedbackChanges(instanceUris, orgUuid, since = null) {
   if (!instanceUris || instanceUris.length === 0) return [];
 
-  const escapedUris = instanceUris.map((uri) => sparqlEscapeUri(uri)).join("\n");
+  const escapedUris = instanceUris
+    .map((uri) => sparqlEscapeUri(uri))
+    .join("\n");
+  const sinceFilter = since
+    ? `\n            FILTER(?feedbackModifiedDate >= ${sparqlEscapeDateTime(since)})`
+    : "";
   const queryString = `
     ${PREFIXES}
     SELECT DISTINCT ?instanceUri ?title ?feedbackModifiedDate ?creator ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName ?feedbackText ?feedbackOrganizationLabel ?feedbackDate WHERE {
           GRAPH ${userGraph(orgUuid)} {
             VALUES ?instanceUri { ${escapedUris} }
 
-            ?instanceUri lpdcExt:feedbackAvailable true ;
+            ?instanceUri lpdcExt:feedbackAvailable ?notificationsEnabled ;
                          lpdcExt:feedbackModifiedDate ?feedbackModifiedDate .
             OPTIONAL {
               ?instanceUri dct:title ?title .
@@ -199,7 +254,7 @@ export async function getFeedbackChanges(instanceUris, since, orgUuid) {
 
             ?question schema2:agent ?feedbackOrganization;
                       schema2:question ?feedbackText .
-
+            FILTER(STR(?notificationsEnabled) = "true"|| STR(?notificationsEnabled) = "1")
             FILTER NOT EXISTS {
               ?newerFeedback skos:primarySubject ?instanceUri;
                              schema2:actionStatus <${FEEDBACK_STATUS.OPEN}>;
@@ -207,7 +262,7 @@ export async function getFeedbackChanges(instanceUris, since, orgUuid) {
 
               FILTER (?newerFeedbackDate > ?feedbackDate || (?newerFeedbackDate = ?feedbackDate && str(?newerFeedback) > str(?feedback)))
             }
-            FILTER(?feedbackModifiedDate >= ${sparqlEscapeDateTime(since)})
+            ${sinceFilter}
           }
 
           OPTIONAL {
@@ -243,7 +298,7 @@ export async function getFeedbackChanges(instanceUris, since, orgUuid) {
    `;
 
   const queryResult = await query(queryString);
-  return (queryResult.results?.bindings || []).map((binding) => {
+  const results = (queryResult.results?.bindings || []).map((binding) => {
     const creatorFirstName = binding.creatorFirstName?.value || "";
     const creatorLastName = binding.creatorFamilyName?.value || "";
     const creatorFullName = `${creatorFirstName} ${creatorLastName}`.trim();
@@ -264,12 +319,23 @@ export async function getFeedbackChanges(instanceUris, since, orgUuid) {
       feedbackDate: new Date(binding.feedbackDate?.value),
     };
   });
+  const uniqueinstanceUris = new Set();
+  return results.filter(r => !uniqueinstanceUris.has(r.instanceUri) && uniqueinstanceUris.add(r.instanceUri));
 }
 
-export async function getFormalInformalChanges(instanceUris, since, orgUuid) {
+export async function getFormalInformalChanges(
+  instanceUris,
+  orgUuid,
+  since = null,
+) {
   if (!instanceUris || instanceUris.length === 0) return [];
 
-  const escapedUris = instanceUris.map((uri) => sparqlEscapeUri(uri)).join("\n");
+  const escapedUris = instanceUris
+    .map((uri) => sparqlEscapeUri(uri))
+    .join("\n");
+  const sinceFilter = since
+    ? `\n        FILTER(?formalInformalModifiedDate >= ${sparqlEscapeDateTime(since)})`
+    : "";
   const queryString = `
     ${PREFIXES}
     SELECT DISTINCT ?instanceUri ?title ?creator ?formalInformalModifiedDate ?dutchLanguageVariant ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName
@@ -277,13 +343,13 @@ export async function getFormalInformalChanges(instanceUris, since, orgUuid) {
       GRAPH ${userGraph(orgUuid)} {
         VALUES ?instanceUri { ${escapedUris} }
 
-        ?instanceUri lpdcExt:needsConversionFromFormalToInformal true ;
+        ?instanceUri lpdcExt:needsConversionFromFormalToInformal ?needsConversionFromFormalToInformal ;
                     lpdcExt:dutchLanguageVariant ?dutchLanguageVariant ;
                     lpdcExt:formalInformalModifiedDate ?formalInformalModifiedDate .
-
+        FILTER(STR(?needsConversionFromFormalToInformal) = "true"|| STR(?needsConversionFromFormalToInformal) = "1")
         OPTIONAL { ?instanceUri dct:title ?title . }
 
-        FILTER(?formalInformalModifiedDate >= ${sparqlEscapeDateTime(since)})
+        ${sinceFilter}
       }
 
       OPTIONAL {
@@ -313,7 +379,7 @@ export async function getFormalInformalChanges(instanceUris, since, orgUuid) {
   `;
 
   const queryResult = await query(queryString);
-  return (queryResult.results?.bindings || []).map((binding) => {
+  const results = (queryResult.results?.bindings || []).map((binding) => {
     const creatorFirstName = binding.creatorFirstName?.value || "";
     const creatorLastName = binding.creatorFamilyName?.value || "";
     const creatorFullName = `${creatorFirstName} ${creatorLastName}`.trim();
@@ -333,6 +399,8 @@ export async function getFormalInformalChanges(instanceUris, since, orgUuid) {
       ),
     };
   });
+  const uniqueinstanceUris = new Set();
+  return results.filter(r => !uniqueinstanceUris.has(r.instanceUri) && uniqueinstanceUris.add(r.instanceUri));
 }
 
 export async function getStatusReportData(orgUuid) {
@@ -432,37 +500,49 @@ export async function getStatusReportData(orgUuid) {
     totalHerziening: parseInt(binding?.totalHerziening?.value ?? "0"),
     totalFeedback: parseInt(binding?.totalFeedback?.value ?? "0"),
     totalFormalInformal: parseInt(binding?.totalFormalInformal?.value ?? "0"),
-    totalDuplicateProductIds: parseInt(binding?.totalDuplicateProductIds?.value ?? "0"),
+    totalDuplicateProductIds: parseInt(
+      binding?.totalDuplicateProductIds?.value ?? "0",
+    ),
 
     duplicateProductTitles:
       duplicateTitlesResult.results?.bindings?.map(
-        (binding) => binding.title.value
+        (binding) => binding.title.value,
       ) ?? [],
   };
 }
 
-export async function getReviewStatusChanges(instanceUris, since, orgUuid) {
+export async function getReviewStatusChanges(
+  instanceUris,
+  orgUuid,
+  since = null,
+) {
   if (!instanceUris || instanceUris.length === 0) return [];
 
-  const escapedUris = instanceUris.map((uri) => sparqlEscapeUri(uri)).join("\n");
+  const escapedUris = instanceUris
+    .map((uri) => sparqlEscapeUri(uri))
+    .join("\n");
+  const sinceFilter = since
+    ? `\n        FILTER(?reviewStatusModifiedDate >= ${sparqlEscapeDateTime(since)})`
+    : "";
   const queryString = `
     ${PREFIXES}
-    SELECT DISTINCT ?instanceUri ?title ?creator ?status ?productID ?dutchLanguageVariant ?reviewStatusModifiedDate ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName ?versionedSource ?hasLatestFunctionalChange
+    SELECT DISTINCT ?instanceUri ?title ?creator ?status ?conceptStatus ?productID ?dutchLanguageVariant ?reviewStatusModifiedDate ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName ?versionedSource ?hasLatestFunctionalChange
     WHERE {
       GRAPH ${userGraph(orgUuid)} {
         VALUES ?instanceUri { ${escapedUris} }
 
-        ?instanceUri ext:reviewStatus ?status ;
-                    schema:productID ?productID ;
-                    lpdcExt:reviewStatusModifiedDate ?reviewStatusModifiedDate .
+        ?instanceUri adms:status ?status ;
+                     ext:reviewStatus ?conceptStatus ;
+                     schema:productID ?productID ;
+                     lpdcExt:reviewStatusModifiedDate ?reviewStatusModifiedDate .
 
         OPTIONAL { ?instanceUri dct:title ?title . }
         OPTIONAL { ?instanceUri ext:hasVersionedSource ?versionedSource . }
         OPTIONAL { ?instanceUri lpdcExt:dutchLanguageVariant ?dutchLanguageVariant . }
         OPTIONAL { ?instanceUri dct:source ?source . }
 
-        FILTER(?reviewStatusModifiedDate >= ${sparqlEscapeDateTime(since)})
-        FILTER(?status IN (
+        ${sinceFilter}
+        FILTER(?conceptStatus IN (
           <http://lblod.data.gift/concepts/review-status/concept-gewijzigd>,
           <http://lblod.data.gift/concepts/review-status/concept-gearchiveerd>
         ))
@@ -500,15 +580,8 @@ export async function getReviewStatusChanges(instanceUris, since, orgUuid) {
     }
   `;
 
-  const statusMap = {
-    "http://lblod.data.gift/concepts/review-status/concept-gewijzigd":
-      "gewijzigd",
-    "http://lblod.data.gift/concepts/review-status/concept-gearchiveerd":
-      "gearchiveerd",
-  };
-
   const queryResult = await query(queryString);
-  return (queryResult.results?.bindings || []).map((binding) => {
+  const results = (queryResult.results?.bindings || []).map((binding) => {
     const creatorFirstName = binding.creatorFirstName?.value || "";
     const creatorLastName = binding.creatorFamilyName?.value || "";
     const creatorFullName = `${creatorFirstName} ${creatorLastName}`.trim();
@@ -524,7 +597,8 @@ export async function getReviewStatusChanges(instanceUris, since, orgUuid) {
       creator: creatorFullName || "Onbekend",
       lastModifier: modifierFullName || "Onbekend",
       dutchLanguageVariant: binding.dutchLanguageVariant?.value || "",
-      status: statusMap[binding.status?.value],
+      status: STATUS_MAP[binding.status?.value],
+      conceptStatus: CONCEPT_STATUS_MAP[binding.conceptStatus?.value],
       versionedSource: binding.versionedSource?.value || "Onbekend",
       hasLatestFunctionalChange:
         binding.hasLatestFunctionalChange?.value || "Onbekend",
@@ -533,6 +607,8 @@ export async function getReviewStatusChanges(instanceUris, since, orgUuid) {
       ),
     };
   });
+  const uniqueinstanceUris = new Set();
+  return results.filter(r => !uniqueinstanceUris.has(r.instanceUri) && uniqueinstanceUris.add(r.instanceUri));
 }
 
 export async function linkTaskToPreference(taskUri, notificationPreferenceUri) {
@@ -552,9 +628,12 @@ export async function linkTaskToPreference(taskUri, notificationPreferenceUri) {
  * @param {object} notificationPreference
  * @param {Object} email
  */
-export async function insertEmail(notificationPreference, email, task) {
+export async function insertEmail(notificationPreference, email, task = null) {
   try {
     const now = new Date();
+    const taskRef = task
+      ? `\n      GRAPH ${sparqlEscapeUri(JOB_GRAPH)} {\n        ${sparqlEscapeUri(task)} dct:references ${sparqlEscapeUri(email.uri)} .\n      }`
+      : "";
     const emailQuery = `
     ${PREFIXES}
     INSERT DATA {
@@ -570,10 +649,7 @@ export async function insertEmail(notificationPreference, email, task) {
                                       dct:creator ${sparqlEscapeUri(SERVICE_URI)} ;
                                       dct:references ${sparqlEscapeUri(notificationPreference.uri)} ;
                                       dct:created ${sparqlEscapeDateTime(now)} .
-      }
-      GRAPH ${sparqlEscapeUri(JOB_GRAPH)} {
-        ${sparqlEscapeUri(task)} dct:references ${sparqlEscapeUri(email.uri)} .
-      }
+      }${taskRef}
     }`;
     await update(emailQuery);
   } catch (err) {
