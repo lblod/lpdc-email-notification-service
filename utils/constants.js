@@ -31,6 +31,7 @@ export const PREFIXES = `
   PREFIX nmo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nmo#>
   PREFIX task: <http://redpencil.data.gift/vocabularies/tasks/>
   PREFIX org: <http://www.w3.org/ns/org#>
+  PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
 `;
 
 export const FEEDBACK_STATUS = {
