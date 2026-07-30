@@ -40,6 +40,7 @@ export async function getAdhocNotificationPreferencesForInstance(
                                 lpdcExt:hasNotificationRuleConfig ?ruleConfig ;
                                 lpdcExt:notificationsEnabled ?notificationsEnabled;
                                 dct:creator ?gebruiker ;
+                                org:linkedTo ?bestuurseenheid ;
                                 schema:email ?emailAddress .
 
         ?ruleConfig lpdcExt:hasEnabledRule ${sparqlEscapeUri(notificationAction)} ;
@@ -49,7 +50,6 @@ export async function getAdhocNotificationPreferencesForInstance(
       }
       GRAPH ?orgGraph {
         ?gebruiker a foaf:Person ;
-                  foaf:member ?bestuurseenheid ;
                   foaf:firstName ?gebruikerFirstName ;
                   foaf:familyName ?gebruikerFamilyName .
       }
@@ -83,7 +83,6 @@ export async function getActiveNotificationPreferences() {
     WHERE {
       GRAPH ?orgGraph {
         ?gebruiker a foaf:Person ;
-                  foaf:member ?bestuurseenheid ;
                   foaf:firstName ?gebruikerFirstName ;
                   foaf:familyName ?gebruikerFamilyName .
       }
@@ -103,6 +102,7 @@ export async function getActiveNotificationPreferences() {
       GRAPH ?userGraph {
         ?notificationPreference a lpdcExt:NotificationPreference ;
                                 dct:creator ?gebruiker ;
+                                org:linkedTo ?bestuurseenheid ;
                                 schema:email ?emailAddress ;
                                 lpdcExt:notificationsEnabled ?notificationsEnabled ;
                                 lpdcExt:hasNotificationRuleConfig ?ruleConfig .
