@@ -1,6 +1,6 @@
 import { formatInTimeZone } from "date-fns-tz";
 import { sparqlEscapeUri } from "mu";
-import { FREQUENCIES, MAX_INSTANCES_PER_EMAIL_SECTION } from "./constants";
+import { FREQUENCIES, MAX_INSTANCES_PER_EMAIL_SECTION, REPORT_MONTHS, RETRY_WINDOW_DAYS} from "./constants";
 import { convert } from "html-to-text";
 
 export function getUUIDFromUri(uri) {
@@ -60,14 +60,15 @@ export function sortAndLimitInstances(instances, dateField) {
 
 export function isStatusReportDue() {
   const now = new Date();
-  const month = now.getMonth();
-  const day = now.getDate();
-  //Mar 1 and Sep 1
-  return (month === 2 && day === 1) || (month === 8 && day === 1);
+  return REPORT_MONTHS.some(
+    (m) => now.getUTCMonth() === m && now.getUTCDate() <= RETRY_WINDOW_DAYS
+  );
 }
 
-export function getStatusReportRunStart() {
+export function getStatusReportPeriodStart() {
   const now = new Date();
-  const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-  return startOfDay.toISOString();
+  const month = REPORT_MONTHS.includes(now.getUTCMonth())
+    ? now.getUTCMonth()
+    : REPORT_MONTHS.at(-1);
+  return new Date(Date.UTC(now.getUTCFullYear(), month, 1)).toISOString();
 }

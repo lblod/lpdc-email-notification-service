@@ -88,6 +88,9 @@ export const TASK_OPERATION = {
   STATUS_REPORT: 'http://lblod.data.gift/id/jobs/concept/TaskOperation/lpdcStatusReportNotification',
 };
 
+export const REPORT_MONTHS = [2, 8];   // march, september (0-indexed)
+export const RETRY_WINDOW_DAYS = 2;
+
 export const SYSTEM_EMAIL_GRAPH = 'http://mu.semte.ch/graphs/system/email';
 export const JOB_OPERATION = 'http://lblod.data.gift/id/jobs/concept/JobOperation/lpdcEmailNotification';
 export const JOB_TYPE = "http://vocab.deri.ie/cogs#Job";
