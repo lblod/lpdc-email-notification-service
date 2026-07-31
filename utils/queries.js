@@ -623,6 +623,22 @@ export async function linkTaskToPreference(taskUri, notificationPreferenceUri) {
   await update(q);
 }
 
+export async function hasStatusReportBeenSent(orgUri, since) {
+  const q = `
+    ${PREFIXES}
+    ASK {
+      GRAPH ${sparqlEscapeUri(SYSTEM_EMAIL_GRAPH)} {
+        ?email a nmo:Email ;
+               dct:references ${sparqlEscapeUri(orgUri)} ;
+               dct:created ?created .
+        FILTER(?created >= ${sparqlEscapeDateTime(since)})
+      }
+    }
+  `;
+  const result = await query(q);
+  return result.boolean === true;
+}
+
 /**
  * Puts email in the right mail folder graph for sending
  * @param {object} notificationPreference
