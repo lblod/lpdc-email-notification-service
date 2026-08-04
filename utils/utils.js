@@ -58,17 +58,21 @@ export function sortAndLimitInstances(instances, dateField) {
     .slice(0, MAX_INSTANCES_PER_EMAIL_SECTION);
 }
 
+// Checks if the statusReport is due, with a 2 day retry window (RETRY_WINDOW_DAYS) in case of errors
+// => will run on march 1 and 2 & september 1 and 2
 export function isStatusReportDue() {
   const now = new Date();
-  return REPORT_MONTHS.some(
-    (m) => now.getUTCMonth() === m && now.getUTCDate() <= RETRY_WINDOW_DAYS
-  );
+  const currentMonth = now.getUTCMonth();
+  const dayOfMonth = now.getUTCDate();
+
+  const isReportMonth = REPORT_MONTHS.includes(currentMonth);
+  const isWithinRetryWindow = dayOfMonth <= RETRY_WINDOW_DAYS;
+
+  return isReportMonth && isWithinRetryWindow;
 }
 
+// Generates the ISO timestamp representing the start of the current reporting period.
 export function getStatusReportPeriodStart() {
   const now = new Date();
-  const month = REPORT_MONTHS.includes(now.getUTCMonth())
-    ? now.getUTCMonth()
-    : REPORT_MONTHS.at(-1);
-  return new Date(Date.UTC(now.getUTCFullYear(), month, 1)).toISOString();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
 }
