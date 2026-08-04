@@ -750,7 +750,7 @@ export async function updateStatus(uri, status) {
 /**
  * Adds an error resource to the given job
  */
-export async function addError(jobUri, error) {
+export async function addError(jobUri, error, reference) {
   const errorUuid = uuid();
   const errorUri = `${ERROR_URI_PREFIX}${errorUuid}`;
   const message = error?.message ?? String(error);
@@ -761,7 +761,9 @@ export async function addError(jobUri, error) {
         ${sparqlEscapeUri(jobUri)} task:error ${sparqlEscapeUri(errorUri)} .
         ${sparqlEscapeUri(errorUri)} a oslc:Error ;
           mu:uuid ${sparqlEscapeString(errorUuid)} ;
-          oslc:message ${sparqlEscapeString(message)} .
+          oslc:message ${sparqlEscapeString(message)} ;
+          dct:modified ${sparqlEscapeDateTime(new Date().toISOString())} ;
+          dct:references ${sparqlEscapeUri(reference)} .
       }
     }
   `;
