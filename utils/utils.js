@@ -1,6 +1,11 @@
 import { formatInTimeZone } from "date-fns-tz";
 import { sparqlEscapeUri } from "mu";
-import { FREQUENCIES, MAX_INSTANCES_PER_EMAIL_SECTION, REPORT_MONTHS, RETRY_WINDOW_DAYS} from "./constants";
+import {
+  FREQUENCIES,
+  MAX_INSTANCES_PER_EMAIL_SECTION,
+  REPORT_MONTHS,
+  RETRY_WINDOW_DAYS,
+} from "./constants";
 import { convert } from "html-to-text";
 
 export function getUUIDFromUri(uri) {
@@ -43,10 +48,17 @@ export function stripHtmlAndTruncate(htmlString, maxLength = 100) {
   return text;
 }
 
-export function buildIpdcCompareUrl(ipdcUrl, productID, dutchLanguageVariant, versionedSource, hasLatestFunctionalChange) {
-  const languageVersion = dutchLanguageVariant?.toLowerCase() === "nl-be-x-informal"
-    ? "nl/informeel"
-    : "nl";
+export function buildIpdcCompareUrl(
+  ipdcUrl,
+  productID,
+  dutchLanguageVariant,
+  versionedSource,
+  hasLatestFunctionalChange,
+) {
+  const languageVersion =
+    dutchLanguageVariant?.toLowerCase() === "nl-be-x-informal"
+      ? "nl/informeel"
+      : "nl";
   const publicServiceSnapshot = getUUIDFromUri(versionedSource);
   const latestSnapshot = getUUIDFromUri(hasLatestFunctionalChange);
   return `${ipdcUrl}/${languageVersion}/concept/${productID}/revisie/vergelijk?revisie1=${publicServiceSnapshot}&revisie2=${latestSnapshot}`;
@@ -74,5 +86,7 @@ export function isStatusReportDue() {
 // Generates the ISO timestamp representing the start of the current reporting period.
 export function getStatusReportPeriodStart() {
   const now = new Date();
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+  return new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
+  ).toISOString();
 }

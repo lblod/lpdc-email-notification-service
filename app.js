@@ -34,9 +34,6 @@ app.use(
  */
 app.post("/delta-feedback", async (req, res) => {
   try {
-    console.log("--- Delta-feedback received ---");
-    console.log("Delta body:", JSON.stringify(req.body, null, 2));
-
     const feedbackInstances = new Delta(req.body).getInsertsFor(
       "https://productencatalogus.data.vlaanderen.be/ns/ipdc-lpdc#feedbackAvailable",
       "true",
@@ -72,9 +69,6 @@ app.post("/delta-feedback", async (req, res) => {
 
 app.post("/delta-formal-informal", async (req, res) => {
   try {
-    console.log("--- Delta-formal-informal received ---");
-    console.log("Delta body:", JSON.stringify(req.body, null, 2));
-
     const formalInformalInstances = new Delta(req.body).getInsertsFor(
       "https://productencatalogus.data.vlaanderen.be/ns/ipdc-lpdc#needsConversionFromFormalToInformal",
       "true",
@@ -110,9 +104,6 @@ app.post("/delta-formal-informal", async (req, res) => {
 
 app.post("/delta-review-status", async (req, res) => {
   try {
-    console.log("--- Delta-review-status received ---");
-    console.log("Delta body:", JSON.stringify(req.body, null, 2));
-
     const archived = new Delta(req.body).getInsertsFor(
       "http://mu.semte.ch/vocabularies/ext/reviewStatus",
       "http://lblod.data.gift/concepts/review-status/concept-gearchiveerd",

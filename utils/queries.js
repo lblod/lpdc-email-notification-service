@@ -320,7 +320,11 @@ export async function getFeedbackChanges(instanceUris, orgUuid, since = null) {
     };
   });
   const uniqueinstanceUris = new Set();
-  return results.filter(r => !uniqueinstanceUris.has(r.instanceUri) && uniqueinstanceUris.add(r.instanceUri));
+  return results.filter(
+    (r) =>
+      !uniqueinstanceUris.has(r.instanceUri) &&
+      uniqueinstanceUris.add(r.instanceUri),
+  );
 }
 
 export async function getFormalInformalChanges(
@@ -400,7 +404,11 @@ export async function getFormalInformalChanges(
     };
   });
   const uniqueinstanceUris = new Set();
-  return results.filter(r => !uniqueinstanceUris.has(r.instanceUri) && uniqueinstanceUris.add(r.instanceUri));
+  return results.filter(
+    (r) =>
+      !uniqueinstanceUris.has(r.instanceUri) &&
+      uniqueinstanceUris.add(r.instanceUri),
+  );
 }
 
 export async function getStatusReportData(orgUuid) {
@@ -608,7 +616,11 @@ export async function getReviewStatusChanges(
     };
   });
   const uniqueinstanceUris = new Set();
-  return results.filter(r => !uniqueinstanceUris.has(r.instanceUri) && uniqueinstanceUris.add(r.instanceUri));
+  return results.filter(
+    (r) =>
+      !uniqueinstanceUris.has(r.instanceUri) &&
+      uniqueinstanceUris.add(r.instanceUri),
+  );
 }
 
 export async function linkTaskToPreference(taskUri, notificationPreferenceUri) {
@@ -669,7 +681,7 @@ export async function insertEmail(notificationPreference, email, task = null) {
     }`;
     await update(emailQuery);
   } catch (err) {
-    console.log("error", err);
+    console.error("Error inserting email:", err);
     throw err;
   }
 }
