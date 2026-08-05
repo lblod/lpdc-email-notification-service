@@ -1,6 +1,11 @@
 import { formatInTimeZone } from "date-fns-tz";
 import { sparqlEscapeUri } from "mu";
-import { FREQUENCIES, MAX_INSTANCES_PER_EMAIL_SECTION } from "./constants";
+import {
+  FREQUENCIES,
+  MAX_INSTANCES_PER_EMAIL_SECTION,
+  REPORT_MONTHS,
+  RETRY_WINDOW_DAYS,
+} from "./constants";
 import { convert } from "html-to-text";
 
 export function getUUIDFromUri(uri) {
@@ -43,10 +48,17 @@ export function stripHtmlAndTruncate(htmlString, maxLength = 100) {
   return text;
 }
 
-export function buildIpdcCompareUrl(ipdcUrl, productID, dutchLanguageVariant, versionedSource, hasLatestFunctionalChange) {
-  const languageVersion = dutchLanguageVariant?.toLowerCase() === "nl-be-x-informal"
-    ? "nl/informeel"
-    : "nl";
+export function buildIpdcCompareUrl(
+  ipdcUrl,
+  productID,
+  dutchLanguageVariant,
+  versionedSource,
+  hasLatestFunctionalChange,
+) {
+  const languageVersion =
+    dutchLanguageVariant?.toLowerCase() === "nl-be-x-informal"
+      ? "nl/informeel"
+      : "nl";
   const publicServiceSnapshot = getUUIDFromUri(versionedSource);
   const latestSnapshot = getUUIDFromUri(hasLatestFunctionalChange);
   return `${ipdcUrl}/${languageVersion}/concept/${productID}/revisie/vergelijk?revisie1=${publicServiceSnapshot}&revisie2=${latestSnapshot}`;
@@ -58,10 +70,23 @@ export function sortAndLimitInstances(instances, dateField) {
     .slice(0, MAX_INSTANCES_PER_EMAIL_SECTION);
 }
 
+// Checks if the statusReport is due, with a 2 day retry window (RETRY_WINDOW_DAYS) in case of errors
+// => will run on march 1 and 2 & september 1 and 2
 export function isStatusReportDue() {
   const now = new Date();
-  const month = now.getMonth();
-  const day = now.getDate();
-  //Mar 1 and Sep 1
-  return (month === 2 && day === 1) || (month === 8 && day === 1);
+  const currentMonth = now.getUTCMonth();
+  const dayOfMonth = now.getUTCDate();
+
+  const isReportMonth = REPORT_MONTHS.includes(currentMonth);
+  const isWithinRetryWindow = dayOfMonth <= RETRY_WINDOW_DAYS;
+
+  return isReportMonth && isWithinRetryWindow;
+}
+
+// Generates the ISO timestamp representing the start of the current reporting period.
+export function getStatusReportPeriodStart() {
+  const now = new Date();
+  return new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
+  ).toISOString();
 }

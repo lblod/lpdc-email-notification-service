@@ -320,7 +320,11 @@ export async function getFeedbackChanges(instanceUris, orgUuid, since = null) {
     };
   });
   const uniqueinstanceUris = new Set();
-  return results.filter(r => !uniqueinstanceUris.has(r.instanceUri) && uniqueinstanceUris.add(r.instanceUri));
+  return results.filter(
+    (r) =>
+      !uniqueinstanceUris.has(r.instanceUri) &&
+      uniqueinstanceUris.add(r.instanceUri),
+  );
 }
 
 export async function getFormalInformalChanges(
@@ -400,7 +404,11 @@ export async function getFormalInformalChanges(
     };
   });
   const uniqueinstanceUris = new Set();
-  return results.filter(r => !uniqueinstanceUris.has(r.instanceUri) && uniqueinstanceUris.add(r.instanceUri));
+  return results.filter(
+    (r) =>
+      !uniqueinstanceUris.has(r.instanceUri) &&
+      uniqueinstanceUris.add(r.instanceUri),
+  );
 }
 
 export async function getStatusReportData(orgUuid) {
@@ -608,7 +616,11 @@ export async function getReviewStatusChanges(
     };
   });
   const uniqueinstanceUris = new Set();
-  return results.filter(r => !uniqueinstanceUris.has(r.instanceUri) && uniqueinstanceUris.add(r.instanceUri));
+  return results.filter(
+    (r) =>
+      !uniqueinstanceUris.has(r.instanceUri) &&
+      uniqueinstanceUris.add(r.instanceUri),
+  );
 }
 
 export async function linkTaskToPreference(taskUri, notificationPreferenceUri) {
@@ -621,6 +633,22 @@ export async function linkTaskToPreference(taskUri, notificationPreferenceUri) {
     }
   `;
   await update(q);
+}
+
+export async function hasStatusReportBeenSent(orgUri, since) {
+  const q = `
+    ${PREFIXES}
+    ASK {
+      GRAPH ${sparqlEscapeUri(SYSTEM_EMAIL_GRAPH)} {
+        ?email a nmo:Email ;
+               dct:references ${sparqlEscapeUri(orgUri)} ;
+               dct:created ?created .
+        FILTER(?created >= ${sparqlEscapeDateTime(since)})
+      }
+    }
+  `;
+  const result = await query(q);
+  return result.boolean === true;
 }
 
 /**
@@ -653,7 +681,7 @@ export async function insertEmail(notificationPreference, email, task = null) {
     }`;
     await update(emailQuery);
   } catch (err) {
-    console.log("error", err);
+    console.error("Error inserting email:", err);
     throw err;
   }
 }
@@ -734,7 +762,7 @@ export async function updateStatus(uri, status) {
 /**
  * Adds an error resource to the given job
  */
-export async function addError(jobUri, error) {
+export async function addError(jobUri, error, reference) {
   const errorUuid = uuid();
   const errorUri = `${ERROR_URI_PREFIX}${errorUuid}`;
   const message = error?.message ?? String(error);
@@ -745,7 +773,9 @@ export async function addError(jobUri, error) {
         ${sparqlEscapeUri(jobUri)} task:error ${sparqlEscapeUri(errorUri)} .
         ${sparqlEscapeUri(errorUri)} a oslc:Error ;
           mu:uuid ${sparqlEscapeString(errorUuid)} ;
-          oslc:message ${sparqlEscapeString(message)} .
+          oslc:message ${sparqlEscapeString(message)} ;
+          dct:modified ${sparqlEscapeDateTime(new Date().toISOString())} ;
+          dct:references ${sparqlEscapeUri(reference)} .
       }
     }
   `;
