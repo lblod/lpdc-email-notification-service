@@ -26,6 +26,7 @@ app.use(
     type: function (req) {
       return req.get("content-type").startsWith("application/json");
     },
+    limit: "50mb",
   }),
 );
 
