@@ -57,8 +57,8 @@ export const FREQUENCIES = {
 export const STATUS_MAP = {
   "http://lblod.data.gift/concepts/instance-status/ontwerp":
     "ontwerp",
-  "http://lblod.data.gift/concepts/instance-status/verstuurd":
-    "verstuurd",
+  "http://lblod.data.gift/concepts/instance-status/verzonden":
+    "verzonden",
 };
 export const CONCEPT_STATUS_MAP = {
   "http://lblod.data.gift/concepts/review-status/concept-gewijzigd":
