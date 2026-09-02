@@ -99,3 +99,4 @@ export const TASK_TYPE = 'http://redpencil.data.gift/vocabularies/tasks/Task';
 export const JOB_URI_PREFIX = 'http://redpencil.data.gift/id/job/';
 export const TASK_URI_PREFIX = 'http://redpencil.data.gift/id/task/';
 export const ERROR_URI_PREFIX = 'http://redpencil.data.gift/id/jobs/error/';
+export const EMAIL_URI_PREFIX = "http://data.lblod.info/id/emails/";
