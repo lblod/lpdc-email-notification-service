@@ -21,6 +21,7 @@ import {
   JOB_URI_PREFIX,
   TASK_URI_PREFIX,
   ERROR_URI_PREFIX,
+  EMAIL_URI_PREFIX,
   SYSTEM_EMAIL_GRAPH,
   FREQUENCIES,
 } from "./constants";
@@ -635,15 +636,22 @@ export async function linkTaskToPreference(taskUri, notificationPreferenceUri) {
   await update(q);
 }
 
-export async function hasStatusReportBeenSent(orgUri, since) {
+// Check if the status report has a success job the previous day OR if an email has been sent so no duplicate emails are sent for the same status report
+export async function hasStatusReportBeenProcessed(referenceUri, since) {
   const q = `
     ${PREFIXES}
     ASK {
-      GRAPH ${sparqlEscapeUri(SYSTEM_EMAIL_GRAPH)} {
-        ?email a nmo:Email ;
-               dct:references ${sparqlEscapeUri(orgUri)} ;
-               dct:created ?created .
+      GRAPH ${sparqlEscapeUri(JOB_GRAPH)} {
+        ?task task:operation ${sparqlEscapeUri(TASK_OPERATION.STATUS_REPORT)} ;
+              dct:references ${sparqlEscapeUri(referenceUri)} ;
+              dct:created ?created ;
+              adms:status ?status .
         FILTER(?created >= ${sparqlEscapeDateTime(since)})
+        FILTER(?status = ${sparqlEscapeUri(JOB_STATUS.SUCCESS)} ||
+          EXISTS {
+            ?task dct:references ?emailUri .
+            FILTER(STRSTARTS(STR(?emailUri), ${sparqlEscapeString(EMAIL_URI_PREFIX)}))
+          })
       }
     }
   `;
@@ -656,7 +664,7 @@ export async function hasStatusReportBeenSent(orgUri, since) {
  * @param {object} notificationPreference
  * @param {Object} email
  */
-export async function insertEmail(notificationPreference, email, task = null) {
+export async function insertEmail(notificationPreference, email, task, operation) {
   try {
     const now = new Date();
     const taskRef = task
@@ -676,6 +684,7 @@ export async function insertEmail(notificationPreference, email, task = null) {
                                       nmo:messageFrom ${sparqlEscapeString(FROM_EMAIL_ADDRESS)} ;
                                       dct:creator ${sparqlEscapeUri(SERVICE_URI)} ;
                                       dct:references ${sparqlEscapeUri(notificationPreference.uri)} ;
+                                      dct:references ${sparqlEscapeUri(operation)} ;
                                       dct:created ${sparqlEscapeDateTime(now)} .
       }${taskRef}
     }`;
