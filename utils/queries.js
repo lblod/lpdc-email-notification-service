@@ -686,8 +686,8 @@ export async function getReviewStatusChanges(
       creator: creatorFullName || "Onbekend",
       lastModifier: modifierFullName || "Onbekend",
       dutchLanguageVariant: binding.dutchLanguageVariant?.value || "",
-      status: STATUS_MAP[binding.status?.value],
-      conceptStatus: CONCEPT_STATUS_MAP[binding.conceptStatus?.value],
+      status: STATUS_MAP[binding.status.value],
+      conceptStatus: CONCEPT_STATUS_MAP[binding.conceptStatus.value],
       versionedSource: binding.versionedSource?.value || "Onbekend",
       hasLatestFunctionalChange:
         binding.hasLatestFunctionalChange?.value || "Onbekend",
