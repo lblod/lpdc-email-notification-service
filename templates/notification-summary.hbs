@@ -61,6 +61,24 @@
       </li>
     {{/if}}
 
+    {{#if yearOldInstances.length}}
+      <li style="margin-bottom:15px;">
+        <strong>&gt;1 jaar{{#unless isAdhoc}} ({{yearOldInstancesTotalCount}}){{/unless}}</strong>
+
+        <ul style="margin-top:5px;">
+          {{#each yearOldInstances}}
+          <li style="margin-bottom:24px;">
+            <strong style="display:inline-block; margin-bottom:4px;">{{title}}</strong><br />
+            <span>Aangemaakt door: {{creator}}</span><br />
+            <span>Laatst bewerkt door: {{lastModifier}}</span><br />
+            <span>Laatst bewerkt op: {{lastModifiedOn}}</span><br />
+            <span>Status: {{status}}</span>
+          </li>
+          {{/each}}
+        </ul>
+      </li>
+    {{/if}}
+
     {{#if formalInformalInstances.length}}
       <li style="margin-bottom:15px;">
         <strong>Omzetting naar de 'je'-vorm{{#unless isAdhoc}} ({{formalInformalInstancesTotalCount}}){{/unless}}</strong>
