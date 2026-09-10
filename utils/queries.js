@@ -724,8 +724,10 @@ export async function hasStatusReportBeenProcessed(referenceUri, since) {
       GRAPH ${sparqlEscapeUri(JOB_GRAPH)} {
         ?task task:operation ${sparqlEscapeUri(TASK_OPERATION.STATUS_REPORT)} ;
               dct:references ${sparqlEscapeUri(referenceUri)} ;
+              dct:isPartOf ?job ;
               dct:created ?created ;
               adms:status ?status .
+        ?job a ${sparqlEscapeUri(JOB_TYPE)} .
         FILTER(?created >= ${sparqlEscapeDateTime(since)})
         FILTER(?status = ${sparqlEscapeUri(JOB_STATUS.SUCCESS)} ||
           EXISTS {
