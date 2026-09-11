@@ -495,7 +495,7 @@ export async function getYearOldChanges(instanceUris, orgUuid, since = null) {
 export async function getStatusReportData(orgUuid) {
   const statusQuery = `
     ${PREFIXES}
-    SELECT ?totalInstances ?totalHerziening ?totalFeedback ?totalFormalInformal ?totalDuplicateProductIds
+    SELECT ?totalInstances ?totalHerziening ?totalFeedback ?totalFormalInformal ?totalDuplicateProductIds ?totalYearOld
       WHERE {
         # 1. Total Instances
         {
@@ -554,6 +554,16 @@ export async function getStatusReportData(orgUuid) {
             }
           }
         }
+
+        # 6. Total yearOld
+        {
+          SELECT (COUNT(DISTINCT ?yearOldInstance) AS ?totalYearOld) WHERE {
+            GRAPH ${userGraph(orgUuid)} {
+              ?yearOldInstance a lpdcExt:InstancePublicService ;
+                        lpdcExt:isYearOld true .
+            }
+          }
+        }
       }
   `;
 
@@ -589,6 +599,7 @@ export async function getStatusReportData(orgUuid) {
     totalHerziening: parseInt(binding?.totalHerziening?.value ?? "0"),
     totalFeedback: parseInt(binding?.totalFeedback?.value ?? "0"),
     totalFormalInformal: parseInt(binding?.totalFormalInformal?.value ?? "0"),
+    totalYearOld: parseInt(binding?.totalYearOld?.value ?? "0"),
     totalDuplicateProductIds: parseInt(
       binding?.totalDuplicateProductIds?.value ?? "0",
     ),
