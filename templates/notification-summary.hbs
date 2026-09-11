@@ -25,10 +25,9 @@
   </p>
 
   <ul>
-
     {{#if feedbackInstances.length}}
     <li style="margin-bottom:15px;">
-      <strong>Feedback{{#unless isAdhoc}} ({{feedbackInstances.length}}){{/unless}}</strong>
+      <strong>Feedback{{#unless isAdhoc}} ({{feedbackInstancesTotalCount}}){{/unless}}</strong>
 
       <ul style="margin-top:5px;">
         {{#each feedbackInstances}}
@@ -44,38 +43,38 @@
     {{/if}}
 
     {{#if reviewInstances.length}}
-    <li style="margin-bottom:15px;">
-      <strong>Herziening {{#unless isAdhoc}} ({{reviewInstances.length}}){{/unless}}</strong>
+      <li style="margin-bottom:15px;">
+        <strong>Herziening {{#unless isAdhoc}} ({{reviewInstancesTotalCount}}){{/unless}}</strong>
 
-      <ul style="margin-top:5px;">
-        {{#each reviewInstances}}
-        <li style="margin-bottom:24px;">
-          <strong style="display:inline-block; margin-bottom:4px;">{{title}}</strong><br />
-          <span>Aangemaakt door: {{creator}}</span><br />
-          <span>Laatst bewerkt door: {{lastModifier}}</span><br />
-          <span>Status: {{status}}</span><br />
-          <span>Concept status: {{conceptStatus}}</span><br />
-          <a href="{{ipdcCompareUrl}}">IPDC vergelijking</a>
-        </li>
-        {{/each}}
-      </ul>
-    </li>
+        <ul style="margin-top:5px;">
+          {{#each reviewInstances}}
+          <li style="margin-bottom:24px;">
+            <strong style="display:inline-block; margin-bottom:4px;">{{title}}</strong><br />
+            <span>Aangemaakt door: {{creator}}</span><br />
+            <span>Laatst bewerkt door: {{lastModifier}}</span><br />
+            <span>Status: {{status}}</span><br />
+            <span>Concept status: {{conceptStatus}}</span><br />
+            <a href="{{ipdcCompareUrl}}">IPDC vergelijking</a>
+          </li>
+          {{/each}}
+        </ul>
+      </li>
     {{/if}}
 
     {{#if formalInformalInstances.length}}
-    <li style="margin-bottom:15px;">
-      <strong>Omzetting naar de 'je'-vorm{{#unless isAdhoc}} ({{formalInformalInstances.length}}){{/unless}}</strong>
+      <li style="margin-bottom:15px;">
+        <strong>Omzetting naar de 'je'-vorm{{#unless isAdhoc}} ({{formalInformalInstancesTotalCount}}){{/unless}}</strong>
 
-      <ul style="margin-top:5px;">
-        {{#each formalInformalInstances}}
-        <li style="margin-bottom:24px;">
-          <strong style="display:inline-block; margin-bottom:4px;">{{title}}</strong><br />
-          <span>Aangemaakt door: {{creator}}</span><br />
-          <span>Laatst bewerkt door: {{lastModifier}}</span>
-        </li>
-        {{/each}}
-      </ul>
-    </li>
+        <ul style="margin-top:5px;">
+          {{#each formalInformalInstances}}
+          <li style="margin-bottom:24px;">
+            <strong style="display:inline-block; margin-bottom:4px;">{{title}}</strong><br />
+            <span>Aangemaakt door: {{creator}}</span><br />
+            <span>Laatst bewerkt door: {{lastModifier}}</span>
+          </li>
+          {{/each}}
+        </ul>
+      </li>
     {{/if}}
 
   </ul>
