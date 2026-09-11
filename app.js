@@ -143,6 +143,41 @@ app.post("/delta-review-status", async (req, res) => {
   }
 });
 
+app.post("/delta-year-old", async (req, res) => {
+  try {
+    const yearOldInstances = new Delta(req.body).getInsertsFor(
+      "https://productencatalogus.data.vlaanderen.be/ns/ipdc-lpdc#isYearOld",
+      "true",
+    );
+    for (const instance of yearOldInstances) {
+      const notificationPreferences =
+        await getAdhocNotificationPreferencesForInstance(
+          instance,
+          NOTIFICATION_RULES.YEAR_OLD,
+        );
+      for (const preference of notificationPreferences) {
+        try {
+          await processAdhocNotification(
+            instance,
+            preference,
+            NOTIFICATION_RULES.YEAR_OLD,
+          );
+        } catch (err) {
+          console.error(
+            `Failed to process notification for instance ${instance}, preference ${preference}:`,
+            err,
+          );
+        }
+      }
+    }
+
+    return res.status(204).send();
+  } catch (e) {
+    console.error("Error in delta-feedback", e);
+    return res.status(500).send({ error: e.message });
+  }
+});
+
 app.get("/", function (req, res) {
   res.send("Hello from lpdc-email-notification-service");
 });

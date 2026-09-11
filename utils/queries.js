@@ -412,10 +412,90 @@ export async function getFormalInformalChanges(
   );
 }
 
+export async function getYearOldChanges(instanceUris, orgUuid, since = null) {
+  if (!instanceUris || instanceUris.length === 0) return [];
+
+  const escapedUris = instanceUris
+    .map((uri) => sparqlEscapeUri(uri))
+    .join("\n");
+  const sinceFilter = since
+    ? `\n        FILTER(?yearOldModifiedDate >= ${sparqlEscapeDateTime(since)})`
+    : "";
+  const queryString = `
+    ${PREFIXES}
+    SELECT DISTINCT ?instanceUri ?title ?isYearOld ?status ?yearOldModifiedDate ?lastModifiedOn ?creator ?creatorFirstName ?creatorFamilyName ?lastModifier ?lastModifierFirstName ?lastModifierFamilyName
+    WHERE {
+      GRAPH ${userGraph(orgUuid)} {
+        VALUES ?instanceUri { ${escapedUris} }
+
+        ?instanceUri lpdcExt:isYearOld ?isYearOld ;
+                    adms:status ?status;
+                    schema:dateModified ?lastModifiedOn ;
+                    lpdcExt:yearOldModifiedDate ?yearOldModifiedDate .
+        FILTER(STR(?isYearOld) = "true"|| STR(?isYearOld) = "1")
+        OPTIONAL { ?instanceUri dct:title ?title . }
+
+        ${sinceFilter}
+      }
+
+      OPTIONAL {
+        GRAPH ${userGraph(orgUuid)} {
+          ?instanceUri dct:creator ?creator .
+        }
+        GRAPH ${orgGraph(orgUuid)} {
+          OPTIONAL {
+            ?creator foaf:firstName ?creatorFirstName ;
+                    foaf:familyName ?creatorFamilyName .
+          }
+        }
+      }
+
+      OPTIONAL {
+        GRAPH ${userGraph(orgUuid)} {
+          ?instanceUri ext:lastModifiedBy ?lastModifier .
+        }
+        GRAPH ${orgGraph(orgUuid)} {
+          OPTIONAL {
+            ?lastModifier foaf:firstName ?lastModifierFirstName ;
+                          foaf:familyName ?lastModifierFamilyName .
+          }
+        }
+      }
+    }
+  `;
+
+  const queryResult = await query(queryString);
+  const results = (queryResult.results?.bindings || []).map((binding) => {
+    const creatorFirstName = binding.creatorFirstName?.value || "";
+    const creatorLastName = binding.creatorFamilyName?.value || "";
+    const creatorFullName = `${creatorFirstName} ${creatorLastName}`.trim();
+
+    const modifierFirstName = binding.lastModifierFirstName?.value || "";
+    const modifierLastName = binding.lastModifierFamilyName?.value || "";
+    const modifierFullName = `${modifierFirstName} ${modifierLastName}`.trim();
+
+    return {
+      instanceUri: binding.instanceUri.value,
+      title: binding.title?.value || "",
+      creator: creatorFullName || "Onbekend",
+      lastModifier: modifierFullName || "Onbekend",
+      lastModifiedOn: binding.lastModifiedOn.value,
+      status: STATUS_MAP[binding.status.value],
+      yearOldModifiedDate: new Date(binding.yearOldModifiedDate.value),
+    };
+  });
+  const uniqueinstanceUris = new Set();
+  return results.filter(
+    (r) =>
+      !uniqueinstanceUris.has(r.instanceUri) &&
+      uniqueinstanceUris.add(r.instanceUri),
+  );
+}
+
 export async function getStatusReportData(orgUuid) {
   const statusQuery = `
     ${PREFIXES}
-    SELECT ?totalInstances ?totalHerziening ?totalFeedback ?totalFormalInformal ?totalDuplicateProductIds
+    SELECT ?totalInstances ?totalHerziening ?totalFeedback ?totalFormalInformal ?totalDuplicateProductIds ?totalYearOld
       WHERE {
         # 1. Total Instances
         {
@@ -474,6 +554,16 @@ export async function getStatusReportData(orgUuid) {
             }
           }
         }
+
+        # 6. Total yearOld
+        {
+          SELECT (COUNT(DISTINCT ?yearOldInstance) AS ?totalYearOld) WHERE {
+            GRAPH ${userGraph(orgUuid)} {
+              ?yearOldInstance a lpdcExt:InstancePublicService ;
+                        lpdcExt:isYearOld true .
+            }
+          }
+        }
       }
   `;
 
@@ -509,6 +599,7 @@ export async function getStatusReportData(orgUuid) {
     totalHerziening: parseInt(binding?.totalHerziening?.value ?? "0"),
     totalFeedback: parseInt(binding?.totalFeedback?.value ?? "0"),
     totalFormalInformal: parseInt(binding?.totalFormalInformal?.value ?? "0"),
+    totalYearOld: parseInt(binding?.totalYearOld?.value ?? "0"),
     totalDuplicateProductIds: parseInt(
       binding?.totalDuplicateProductIds?.value ?? "0",
     ),
@@ -606,8 +697,8 @@ export async function getReviewStatusChanges(
       creator: creatorFullName || "Onbekend",
       lastModifier: modifierFullName || "Onbekend",
       dutchLanguageVariant: binding.dutchLanguageVariant?.value || "",
-      status: STATUS_MAP[binding.status?.value],
-      conceptStatus: CONCEPT_STATUS_MAP[binding.conceptStatus?.value],
+      status: STATUS_MAP[binding.status.value],
+      conceptStatus: CONCEPT_STATUS_MAP[binding.conceptStatus.value],
       versionedSource: binding.versionedSource?.value || "Onbekend",
       hasLatestFunctionalChange:
         binding.hasLatestFunctionalChange?.value || "Onbekend",
@@ -644,8 +735,10 @@ export async function hasStatusReportBeenProcessed(referenceUri, since) {
       GRAPH ${sparqlEscapeUri(JOB_GRAPH)} {
         ?task task:operation ${sparqlEscapeUri(TASK_OPERATION.STATUS_REPORT)} ;
               dct:references ${sparqlEscapeUri(referenceUri)} ;
+              dct:isPartOf ?job ;
               dct:created ?created ;
               adms:status ?status .
+        ?job a ${sparqlEscapeUri(JOB_TYPE)} .
         FILTER(?created >= ${sparqlEscapeDateTime(since)})
         FILTER(?status = ${sparqlEscapeUri(JOB_STATUS.SUCCESS)} ||
           EXISTS {
@@ -664,7 +757,12 @@ export async function hasStatusReportBeenProcessed(referenceUri, since) {
  * @param {object} notificationPreference
  * @param {Object} email
  */
-export async function insertEmail(notificationPreference, email, task, operation) {
+export async function insertEmail(
+  notificationPreference,
+  email,
+  task,
+  operation,
+) {
   try {
     const now = new Date();
     const taskRef = task
